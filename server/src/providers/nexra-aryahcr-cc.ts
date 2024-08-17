@@ -1,22 +1,12 @@
-import fetch from 'node-fetch';  // NOTE : CommonJS 形式の v2 系を使うこと
+import fetch from 'node-fetch';  // NOTE : ts-node で実行できるように CommonJS 形式の v2 系を使うこと
 
-/** ロール定義 */
-export type NexraAryahcrCcRole = 'assistant' | 'user';
-
-/** メッセージ定義 */
-export type NexraAryahcrCcMessage = { role: NexraAryahcrCcRole; content: string; };
-
-/** メッセージの配列定義 */
-export type NexraAryahcrCcMessages = Array<NexraAryahcrCcMessage>;
+import { Message } from './providers';
 
 /** 選択可能なモデル定義 */
 export type NexraAryahcrCcModel = 'gpt-4' | 'gpt3.5-turbo' | 'gpt-3';
 
-/** レスポンス定義 (`gpt` プロパティがレスポンステキスト) */
-export type NexraAryahcrCcResponse = { code: number; status: boolean; model: string; gpt: string; };
-
 /** Nexra AryahCR CC プロバイダ */
-export const nexraAryahcrCc = async function(messages: NexraAryahcrCcMessages, model: NexraAryahcrCcModel): Promise<NexraAryahcrCcResponse> {
+export const nexraAryahcrCc = async function(messages: Array<Message>, model: NexraAryahcrCcModel = 'gpt3.5-turbo'): Promise<string> {
   const response = await fetch('https://nexra.aryahcr.cc/api/chat/gpt', {
     method: 'POST',
     headers: {
@@ -29,8 +19,9 @@ export const nexraAryahcrCc = async function(messages: NexraAryahcrCcMessages, m
       markdown: false
     })
   });
-  const json = await response.json() as NexraAryahcrCcResponse;
-  return json;
+  const json = await response.json();
+  const text = json.gpt;
+  return text;
 };
 
 /*

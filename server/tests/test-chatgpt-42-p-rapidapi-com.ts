@@ -1,13 +1,13 @@
 import { Message } from '../src/providers/providers';
-import { nexraAryahcrCc } from '../src/providers/nexra-aryahcr-cc';
+import { chatGpt42PRapidApiCom } from '../src/providers/chatgpt-42-p-rapidapi-com';
 
-/** Nexra AryahCR CC の API をコールするテスト */
+/** ChatGPT 42 P RapidAPI Com の API をコールするテスト */
 (async () => {
   try {
     const messages: Array<Message> = [
       { role: 'user', content: 'あなたは猫を飼っています。ユーモアを交えて猫の状況を教えてください。' }
     ];
-    const text = await nexraAryahcrCc(messages);
+    const text = await chatGpt42PRapidApiCom(messages);
     console.log(text);
   }
   catch(error) {

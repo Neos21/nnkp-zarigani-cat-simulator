@@ -1,13 +1,13 @@
 import { Message } from '../src/providers/providers';
-import { nexraAryahcrCc } from '../src/providers/nexra-aryahcr-cc';
+import { blackboxAi } from '../src/providers/blackbox-ai';
 
-/** Nexra AryahCR CC の API をコールするテスト */
+/** Blackbox AI の API をコールするテスト */
 (async () => {
   try {
     const messages: Array<Message> = [
       { role: 'user', content: 'あなたは猫を飼っています。ユーモアを交えて猫の状況を教えてください。' }
     ];
-    const text = await nexraAryahcrCc(messages);
+    const text = await blackboxAi(messages);
     console.log(text);
   }
   catch(error) {
