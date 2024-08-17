@@ -4,6 +4,7 @@ import { ConfigModule /*, ConfigService*/ } from '@nestjs/config';
 
 // Imports
 import { configuration } from './core/configs/configuration';
+import { SlackModule } from './modules/slack/slack.module';
 // Controllers
 import { AppController } from './app.controller';
 // Providers
@@ -25,7 +26,8 @@ import { AccessLogMiddleware } from './core/middlewares/access-log.middleware';
     //  useFactory: (configService: ConfigService) => [{
     //    rootPath: configService.get<string>('staticDirectoryPath') || path.resolve(__dirname, '../../client/dist')
     //  }]
-    //})
+    //}),
+    SlackModule
   ],
   controllers: [
     AppController
