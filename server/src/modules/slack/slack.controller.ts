@@ -24,7 +24,7 @@ export class SlackController {
     response.end();
     // Bot の投稿は処理しない
     if(request.body?.event?.bot_id != null) {
-      return this.logger.log(`#events() : Bot の投稿のため無視 (Bot ID : [${request.body.event.bot_id}]`);
+      return this.logger.log(`#events() : Bot の投稿のため無視 … Bot ID : [${request.body.event.bot_id}]`);
     }
     // メンションへの反応
     if(request.body?.event?.type === 'app_mention') {
@@ -58,7 +58,7 @@ export class SlackController {
   /** OAuth 認証ページ */
   @Get('oauth')
   public oAuthPage(@Query('code') code: string, @Res() response: Response): void {
-    // `https://slack.com/api/oauth.v2.access` への POST リクエストによる OAuth 認証が必要
+    // TODO : `https://slack.com/api/oauth.v2.access` への POST リクエストによる OAuth 認証が必要
     response.type('html').send(`TODO : OAuth Redirect Page : ${code}`);  // TODO : 要実装
   }
   
