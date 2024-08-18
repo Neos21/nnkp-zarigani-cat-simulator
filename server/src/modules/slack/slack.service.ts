@@ -33,7 +33,7 @@ export class SlackService {
       this.logger.log('#replyToMention() : 返信成功');
     }
     catch(error) {
-      this.logger.warn('#replyToMention() : 返信失敗 …', error.toString());
+      this.logger.warn('#replyToMention() : 返信失敗', error);
     }
   }
   
@@ -56,7 +56,7 @@ export class SlackService {
       this.logger.log('#replyToDirectMessage() : 返信成功');
     }
     catch(error) {
-      this.logger.warn('#replyToDirectMessage() : 返信失敗 …', error.toString());
+      this.logger.warn('#replyToDirectMessage() : 返信失敗', error);
     }
   }
   
@@ -73,11 +73,11 @@ export class SlackService {
           text: `「/zc」コマンド発動！\n\n＞ ${originalText}`  // TODO : 返信内容は要変更
         })
       });
-      const json = await response.json();
-      this.logger.log('#zcCommand() : 返信成功 …', json);
+      const text = await response.text();
+      this.logger.log('#zcCommand() : 返信成功 …', text);
     }
     catch(error) {
-      this.logger.warn('#zcCommand() : 返信失敗 …', error.toString());
+      this.logger.warn('#zcCommand() : 返信失敗 …', error);
     }
   }
   
