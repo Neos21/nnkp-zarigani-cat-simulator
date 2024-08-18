@@ -51,7 +51,8 @@ const getBooleanValue = (envName: string): boolean => {
 
 /** 環境変数のオブジェクトを返す : この関数内にオブジェクトを定義しないと環境変数が読み込まれない */
 export const configuration = (): { [key: string]: string | number | boolean } => ({
-  port                : getNumberValue ('PORT'                 , 5000),  // ポート番号
-  staticDirectoryPath : getStringValue ('STATIC_DIRECTORY_PATH', ''  ),  // 静的ファイルのディレクトリ : 未指定の場合は `app.module.ts` 内で初期値を設定する
-  noColour            : getBooleanValue('NO_COLOR'                   ),  // ロガーの色付けをしない : NestJS のロガー `cli-colors.util.js` と同じ環境変数名・確認のため宣言
+  port                : getNumberValue ('PORT'                 , 5000        ),  // ポート番号
+  staticDirectoryPath : getStringValue ('STATIC_DIRECTORY_PATH', ''          ),  // 静的ファイルのディレクトリ : 未指定の場合は `app.module.ts` 内で初期値を設定する
+  slackBotToken       : getStringValue ('SLACK_BOT_TOKEN'      , 'xoxb-DUMMY'),  // Slack Bot トークン (`xoxb-` 始まり)
+  noColour            : getBooleanValue('NO_COLOR'                           ),  // ロガーの色付けをしない : NestJS のロガー `cli-colors.util.js` と同じ環境変数名・確認のため宣言
 });
