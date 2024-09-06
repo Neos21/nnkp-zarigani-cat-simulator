@@ -10,7 +10,7 @@ export class AppController {
   ) { }
   
   /** AppService が注入できているかの確認用エンドポイント */
-  @Get('/')
+  @Get('')
   public getHello(): string {
     return this.appService.getHello();
   }

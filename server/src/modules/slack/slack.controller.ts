@@ -26,6 +26,7 @@ export class SlackController {
     if(request.body?.event?.bot_id != null) {
       return this.logger.log(`#events() : Bot の投稿のため無視 … Bot ID : [${request.body.event.bot_id}]`);
     }
+    
     // メンションへの反応
     if(request.body?.event?.type === 'app_mention') {
       this.slackService.replyToMention(request.body.event.channel, request.body.event.text);  // Promise
@@ -46,6 +47,7 @@ export class SlackController {
     // TODO : トークン検証が必要
     response.end();  // とりあえずレスポンスする・リプライは非同期に行う
     this.slackService.zcCommand(request.body?.text, request.body?.response_url);  // Promise
+    this.logger.log('#slackCommandZc() : `/zc` スラッシュコマンドへの反応');
   }
   
   /** ランディングページ */

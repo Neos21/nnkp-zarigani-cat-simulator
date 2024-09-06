@@ -2,6 +2,9 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import fetch from 'node-fetch';
 
+import { Message } from '../../providers/providers';
+import { nexraAryahcrCc } from '../../providers/nexra-aryahcr-cc';
+
 /** Slack Service */
 @Injectable()
 export class SlackService {
@@ -17,6 +20,18 @@ export class SlackService {
   /** メンションへの返信処理 */
   public async replyToMention(channelId: string, originalText: string): Promise<void> {
     try {  // https://api.slack.com/methods/chat.postMessage
+      
+      // 一番動作が安定している Nexra AryahCR CC プロバイダを使ってみる
+      const messages: Array<Message> = [
+        { role: 'user', content: 'あなたは猫を飼っています。これから質問をしますので、ユーモアを交えて猫の状況について答えてください。' },
+        { role: 'assistant', content: 'もちろんです！では、どんな質問でも受け付けますよ。猫の立場から楽しくお答えします。' },
+        { role: 'user', content: originalText }
+      ];
+      const result = await nexraAryahcrCc(messages, 'gpt3.5-turbo').catch(() => null);
+      const responseText = result == null
+        ? 'メンションありがとうございます。\n申し訳ありませんが、ザリガニねこの様子が分かりませんでした。'
+        : `メンションにお答えします!\n\n${result}`
+      
       const response = await fetch('https://slack.com/api/chat.postMessage', {
         method: 'POST',
         headers: {
@@ -25,7 +40,7 @@ export class SlackService {
         },
         body: JSON.stringify({
           channel: channelId,
-          text: `メンションありがとう！\n\n＞ ${originalText}`  // TODO : 返信内容は要変更
+          text: responseText
         })
       });
       const json = await response.json();
@@ -40,6 +55,17 @@ export class SlackService {
   /** メンションへの返信処理 */
   public async replyToDirectMessage(channelId: string, originalText: string): Promise<void> {
     try {
+      // 一番動作が安定している Nexra AryahCR CC プロバイダを使ってみる
+      const messages: Array<Message> = [
+        { role: 'user', content: 'あなたは猫を飼っています。これから質問をしますので、ユーモアを交えて猫の状況について答えてください。' },
+        { role: 'assistant', content: 'もちろんです！では、どんな質問でも受け付けますよ。猫の立場から楽しくお答えします。' },
+        { role: 'user', content: originalText }
+      ];
+      const result = await nexraAryahcrCc(messages, 'gpt3.5-turbo').catch(() => null);
+      const responseText = result == null
+        ? 'DM ありがとうございます。\n申し訳ありませんが、ザリガニねこの様子が分かりませんでした。'
+        : `DM にお答えします!\n\n${result}`
+      
       const response = await fetch('https://slack.com/api/chat.postMessage', {
         method: 'POST',
         headers: {
@@ -48,7 +74,7 @@ export class SlackService {
         },
         body: JSON.stringify({
           channel: channelId,
-          text: `DM ありがとう！\n\n＞ ${originalText}`  // TODO : 返信内容は要変更
+          text: responseText
         })
       });
       const json = await response.json();
@@ -63,6 +89,17 @@ export class SlackService {
   /** `/zc` スラッシュコマンドが呼び出された時の処理 */
   public async zcCommand(originalText: string, responseUrl: string): Promise<void> {
     try {
+      // 一番動作が安定している Nexra AryahCR CC プロバイダを使ってみる
+      const messages: Array<Message> = [
+        { role: 'user', content: 'あなたは猫を飼っています。これから質問をしますので、ユーモアを交えて猫の状況について答えてください。' },
+        { role: 'assistant', content: 'もちろんです！では、どんな質問でも受け付けますよ。猫の立場から楽しくお答えします。' },
+        { role: 'user', content: originalText }
+      ];
+      const result = await nexraAryahcrCc(messages, 'gpt3.5-turbo').catch(() => null);
+      const responseText = result == null
+        ? '「/zc」コマンドを受信しました。\n申し訳ありませんが、ザリガニねこの様子が分かりませんでした。'
+        : `「/zc」コマンドにお答えします!\n\n${result}`
+      
       const response = await fetch(responseUrl, {
         method: 'POST',
         headers: {
@@ -70,7 +107,7 @@ export class SlackService {
         },
         body: JSON.stringify({
           response_type: 'in_channel',  // 「あなただけに表示」ではなくチャンネルに公開表示する
-          text: `「/zc」コマンド発動！\n\n＞ ${originalText}`  // TODO : 返信内容は要変更
+          text: responseText
         })
       });
       const text = await response.text();
