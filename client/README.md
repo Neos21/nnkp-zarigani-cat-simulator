@@ -1,33 +1,19 @@
-# nnkp-zarigani-cat-simulator-client
+# nnkp-zarigani-cat-simulator Client
 
-This template should help get you started developing with Vue 3 in Vite.
+[Vue](https://vitejs.dev/) 製のクライアントです。
 
-## Recommended IDE Setup
+```bash
+# 依存モジュールをインストールする
+$ npm install
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+# 開発用 Hot Reload サーバを起動する
+$ npm run dev
 
-## Type Support for `.vue` Imports in TS
+# 本番用に型チェック後ビルドする
+$ npm run build
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vitejs.dev/config/).
-
-## Project Setup
-
-```sh
-npm install
+# 本番用にビルドした資材でプレビュー用サーバを起動する
+$ npm start
 ```
 
-### Compile and Hot-Reload for Development
-
-```sh
-npm run dev
-```
-
-### Type-Check, Compile and Minify for Production
-
-```sh
-npm run build
-```
+ビルドした資材 `./client/dist/` は、サーバサイド側にて静的リソースとして配信されるので、フロントエンドのビルド後、バックエンドサーバを起動することで Vue サイトを確認できる。
