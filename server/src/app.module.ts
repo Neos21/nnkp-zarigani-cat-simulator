@@ -21,19 +21,19 @@ import { AccessLogMiddleware } from './core/middlewares/access-log.middleware';
       isGlobal: true,  // 各 Module での `imports` を不要にする
       load: [configuration]  // 環境変数を読み取り適宜デフォルト値を割り当てるオブジェクトをロードする
     }),
-    // 静的ファイル (クライアント) を配信する
-    ServeStaticModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => [{
-        rootPath: configService.get<string>('staticDirectoryPath')
-      }]
-    }),
-    // 画像ファイルを配信する
+    // 画像ファイルを配信する : 重複するパスは先勝ちするので Vue よりも画像ファイルのパスを先に書いておく
     ServeStaticModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => [{
         rootPath: configService.get<string>('imagesDirectoryPath'),
         serveRoot: '/public/images'
+      }]
+    }),
+    // 静的ファイル (クライアント) を配信する
+    ServeStaticModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => [{
+        rootPath: configService.get<string>('staticDirectoryPath')
       }]
     }),
     SlackModule,
