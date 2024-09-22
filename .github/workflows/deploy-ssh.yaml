@@ -1,12 +1,12 @@
-name: Deploy On Commit
+name: Deploy SSH
 on:
-  push:
-    branches:
-      - main
+  #push:
+  #  branches:
+  #    - main
   # 手動実行
   workflow_dispatch:
 jobs:
-  deploy-on-commit:
+  deploy-ssh:
     runs-on: ubuntu-latest
     steps:
       # https://github.com/appleboy/ssh-action
