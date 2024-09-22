@@ -1,0 +1,26 @@
+{
+  "name": "nnkp-zarigani-cat-simulator-client",
+  "version": "0.0.0",
+  "private": true,
+  "description": "nnkp-zarigani-cat-simulator Client",
+  "type": "module",
+  "scripts": {
+    "start": "vite preview --host",
+    "build": "vue-tsc --build --force && vite build",
+    "dev": "vite --host"
+  },
+  "dependencies": {
+    "vue": "3.5.8",
+    "vue-router": "4.4.5"
+  },
+  "devDependencies": {
+    "@tsconfig/node20": "20.1.4",
+    "@types/node": "20.16.5",
+    "@vitejs/plugin-vue": "5.1.4",
+    "@vue/tsconfig": "0.5.1",
+    "npm-run-all2": "6.2.3",
+    "typescript": "5.4.5",
+    "vite": "5.4.7",
+    "vue-tsc": "2.1.6"
+  }
+}
