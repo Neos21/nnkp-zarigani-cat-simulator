@@ -15,3 +15,19 @@ $ npm run build
 # 本番用にビルドした資材でサーバを起動する
 $ npm start
 ```
+
+
+## 開発用メモ
+
+```bash
+# 画像ファイルのアップロード : ローカルの `source.png` ファイルが `example.png` としてサーバサイドに保存される
+$ curl -X POST http://localhost:5000/api/images \
+  -F 'credential=CHANGE-THIS' \
+  -F 'file_name=example.png' \
+  -F "file=@./source.png;type=image/png"
+
+# 画像ファイルの削除
+$ curl -X DELETE http://localhost:5000/api/images \
+  -H 'Content-TYpe: application/json' \
+  -d '{ "credential": "CHANGE-THIS", "file_name": "test.png" }'
+```

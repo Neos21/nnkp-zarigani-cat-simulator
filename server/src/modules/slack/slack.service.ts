@@ -20,7 +20,6 @@ export class SlackService {
   /** メンションへの返信処理 */
   public async replyToMention(channelId: string, originalText: string): Promise<void> {
     try {  // https://api.slack.com/methods/chat.postMessage
-      
       // 一番動作が安定している Nexra AryahCR CC プロバイダを使ってみる
       const messages: Array<Message> = [
         { role: 'user', content: 'あなたは猫を飼っています。これから質問をしますので、ユーモアを交えて猫の状況について答えてください。' },
@@ -43,8 +42,9 @@ export class SlackService {
           text: responseText
         })
       });
+      if(!response.ok) throw new Error('Server Error');
       const json = await response.json();
-      if(json.ok === false) throw new Error(json.error);
+      if(!json.ok) throw new Error(json.error);
       this.logger.log('#replyToMention() : 返信成功');
     }
     catch(error) {
@@ -77,8 +77,9 @@ export class SlackService {
           text: responseText
         })
       });
+      if(!response.ok) throw new Error('Server Error');
       const json = await response.json();
-      if(json.ok === false) throw new Error(json.error);
+      if(!json.ok) throw new Error(json.error);
       this.logger.log('#replyToDirectMessage() : 返信成功');
     }
     catch(error) {
@@ -110,33 +111,12 @@ export class SlackService {
           text: responseText
         })
       });
+      if(!response.ok) throw new Error('Server Error');
       const text = await response.text();
       this.logger.log('#zcCommand() : 返信成功 …', text);
     }
     catch(error) {
       this.logger.warn('#zcCommand() : 返信失敗 …', error);
     }
-  }
-  
-  /** ランディングページの HTML を返す */
-  public getAboutPageHtml(): string {
-    return `<!DOCTYPE html>
-      <html lang="ja">
-        <head>
-          <meta charset="UTF-8">
-          <meta name="slack-app-id" content="A07HBS5FB8T">
-          <title>ザリガニねこシミュレーター</title>
-        </head>
-        <body>
-          <h1>ザリガニねこシミュレーター</h1>
-          <p>インストールは ↓ コチラから。</p>
-          <p>
-            <a href="https://slack.com/oauth/v2/authorize?client_id=6131689063031.7589889521299&scope=app_mentions:read,chat:write,chat:write.public,commands,im:history&user_scope=">
-              <img alt="Add to Slack" height="40" width="139" src="https://platform.slack-edge.com/img/add_to_slack.png" srcSet="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x">
-            </a>
-          </p>
-        </body>
-      </html>
-    `;
   }
 }

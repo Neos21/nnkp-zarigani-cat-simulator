@@ -1,4 +1,4 @@
-import { Controller, Get, Logger, Post, Query, Req, Res } from '@nestjs/common';
+import { Controller, Logger, Post, Req, Res } from '@nestjs/common';
 import { Request, Response } from 'express';
 
 import { SlackService } from './slack.service';
@@ -20,8 +20,10 @@ export class SlackController {
       response.type('application/json').send({ challange: request.body.challenge });
       return this.logger.log('#events() : リクエスト URL 検証');
     }
+    
     // とりあえずレスポンスしてしまう
     response.end();
+    
     // Bot の投稿は処理しない
     if(request.body?.event?.bot_id != null) {
       return this.logger.log(`#events() : Bot の投稿のため無視 … Bot ID : [${request.body.event.bot_id}]`);
@@ -44,41 +46,9 @@ export class SlackController {
   /** `/zc` スラッシュコマンド用エンドポイント */
   @Post('zc')
   public slashCommandZc(@Req() request: Request, @Res() response: Response): void {
-    // TODO : トークン検証が必要
+    this.logger.log('#slackCommandZc() : Request Headers', request.headers);  // TODO : トークン検証が必要
     response.end();  // とりあえずレスポンスする・リプライは非同期に行う
     this.slackService.zcCommand(request.body?.text, request.body?.response_url);  // Promise
     this.logger.log('#slackCommandZc() : `/zc` スラッシュコマンドへの反応');
-  }
-  
-  /** ランディングページ */
-  @Get('')
-  public aboutPage(@Res() response: Response): void {
-    const responseHtml = this.slackService.getAboutPageHtml();
-    response.type('html').send(responseHtml);
-  }
-  
-  /** OAuth 認証ページ */
-  @Get('oauth')
-  public oAuthPage(@Query('code') code: string, @Res() response: Response): void {
-    // TODO : `https://slack.com/api/oauth.v2.access` への POST リクエストによる OAuth 認証が必要
-    response.type('html').send(`TODO : OAuth Redirect Page : ${code}`);  // TODO : 要実装
-  }
-  
-  /** プライバシーポリシーページ */
-  @Get('privacy-policy')
-  public privacyPolicyPage(@Res() response: Response): void {
-    response.type('html').send('TODO : Privacy Policy Page');  // TODO : 要実装
-  }
-  
-  /** サポートページ */
-  @Get('support')
-  public supportPage(@Res() response: Response): void {
-    response.type('html').send('TODO : Support Page');  // TODO : 要実装
-  }
-  
-  /** 利用規約ページ */
-  @Get('tos')
-  public termsOfServicePage(@Res() response: Response): void {
-    response.type('html').send('TODO : Terms of Service Page');  // TODO : 要実装
   }
 }
