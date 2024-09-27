@@ -1,5 +1,5 @@
 import { Express } from 'express';
-import * as expressListEndpoints from 'express-list-endpoints';
+import expressListEndpoints from 'express-list-endpoints';
 
 import { cyan, green, grey, red, yellow } from './colour-logger';
 

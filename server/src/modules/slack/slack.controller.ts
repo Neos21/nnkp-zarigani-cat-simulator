@@ -1,6 +1,6 @@
 import { Controller, Logger, Post, RawBodyRequest, Req, Res } from '@nestjs/common';
 import { Request, Response } from 'express';
-import qs from 'qs';
+import * as qs from 'qs';
 
 import { SlackService } from './slack.service';
 

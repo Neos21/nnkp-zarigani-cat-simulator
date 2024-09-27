@@ -19,7 +19,8 @@
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
-    "newLine": "lf"
+    "newLine": "lf",
+    "esModuleInterop": true
   },
   "exclude": ["./tests/"]
 }
