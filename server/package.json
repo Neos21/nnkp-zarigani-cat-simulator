@@ -19,6 +19,7 @@
     "crypto": "1.0.1",
     "express-list-endpoints": "7.1.0",
     "node-fetch": "2.7.0",
+    "qs": "6.13.0",
     "reflect-metadata": "0.2.2",
     "rxjs": "7.8.1",
     "tsscmp": "1.0.6"

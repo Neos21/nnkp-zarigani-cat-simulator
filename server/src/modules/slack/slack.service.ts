@@ -125,7 +125,7 @@ export class SlackService {
   }
   
   /** Slack からのリクエストか否か検証する : 参考 https://github.com/slackapi/bolt-js/blob/main/src/receivers/verify-request.ts */
-  public async verifyRequest(xSlackSignature: string, xSlackRequestTimeStamp: string, rawBody: string): boolean {
+  public verifyRequest(xSlackSignature: string, xSlackRequestTimeStamp: string, rawBody: string): boolean {
     const xSlackRequestTimeStampNumber = Number(xSlackRequestTimeStamp);
     if(Number.isNaN(xSlackRequestTimeStampNumber)) {
       this.logger.error('Header x-slack-request-timestamp Did Not Have The Expected Type', xSlackRequestTimeStamp);

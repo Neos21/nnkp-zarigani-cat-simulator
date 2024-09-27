@@ -1,5 +1,6 @@
 import { Controller, Logger, Post, RawBodyRequest, Req, Res } from '@nestjs/common';
 import { Request, Response } from 'express';
+import qs from 'qs';
 
 import { SlackService } from './slack.service';
 
@@ -14,7 +15,7 @@ export class SlackController {
   
   /** Event Subscriptions 用エンドポイント */
   @Post('events')
-  public events(@Req() request: RawBodyRequest<Request> @Res() response: Response): void {
+  public events(@Req() request: Request, @Res() response: Response): void {
     // Event Subscriptions のリクエスト URL を検証するための応答 https://api.slack.com/events/url_verification
     if(request.body?.type === 'url_verification') {
       response.type('application/json').send({ challange: request.body.challenge });
@@ -32,7 +33,7 @@ export class SlackController {
     // Slack からのリクエストか否か認証する・失敗した場合は返信しない
     const xSlackSignature        = String(request.headers['x-slack-signature']);
     const xSlackRequestTimeStamp = String(request.headers['x-slack-request-timestamp']);
-    const rawBody                = request.rawBody.toString();
+    const rawBody                = qs.stringify(request.body).replace((/%20/g), '+');
     if(!this.slackService.verifyRequest(xSlackSignature, xSlackRequestTimeStamp, rawBody)) {
       return this.logger.warn('#events() : リクエスト不正・反応しない', request.headers);
     }
@@ -54,13 +55,13 @@ export class SlackController {
   
   /** `/zc` スラッシュコマンド用エンドポイント */
   @Post('zc')
-  public slashCommandZc(@Req() request: RawBodyRequest<Request>, @Res() response: Response): void {
+  public slashCommandZc(@Req() request: Request, @Res() response: Response): void {
     response.end();  // とりあえずレスポンスする・リプライは非同期に行う
     
     // Slack からのリクエストか否か認証する・失敗した場合は返信しない
     const xSlackSignature        = String(request.headers['x-slack-signature']);
     const xSlackRequestTimeStamp = String(request.headers['x-slack-request-timestamp']);
-    const rawBody                = request.rawBody.toString();
+    const rawBody                = qs.stringify(request.body).replace((/%20/g), '+');
     if(!this.slackService.verifyRequest(xSlackSignature, xSlackRequestTimeStamp, rawBody)) {
       return this.logger.warn('#slackCommandZc() : リクエスト不正・反応しない', request.headers);
     }
