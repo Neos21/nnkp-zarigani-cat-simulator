@@ -14,9 +14,13 @@ $ npm run build
 
 # 本番用にビルドした資材でサーバを起動する
 $ npm start
+```
 
+```bash
 # バックグラウンドで起動する
 $ nohup node ./dist/main.js &
+# バックグラウンドで起動したプロセス ID を出力しておく
+$ echo $!
 # バックグラウンド起動したプロセスを探して終了させる
 $ ps aux | grep node  # プロセス ID を確認する
 $ kill 【PID】        # 確認したプロセス ID を指定して終了する

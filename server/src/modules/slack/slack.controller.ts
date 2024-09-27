@@ -1,6 +1,5 @@
 import { Controller, Logger, Post, RawBodyRequest, Req, Res } from '@nestjs/common';
 import { Request, Response } from 'express';
-//import * as qs from 'qs';
 
 import { SlackService } from './slack.service';
 
@@ -34,7 +33,6 @@ export class SlackController {
     const xSlackSignature        = String(request.headers['x-slack-signature']);
     const xSlackRequestTimeStamp = String(request.headers['x-slack-request-timestamp']);
     const rawBody                = (request as any).rawBody;
-    console.log('Raw Body', rawBody);
     if(!this.slackService.verifyRequest(xSlackSignature, xSlackRequestTimeStamp, rawBody)) {
       return this.logger.warn('#events() : リクエスト不正・反応しない', request.headers);
     }
@@ -63,7 +61,6 @@ export class SlackController {
     const xSlackSignature        = String(request.headers['x-slack-signature']);
     const xSlackRequestTimeStamp = String(request.headers['x-slack-request-timestamp']);
     const rawBody                = (request as any).rawBody;
-    console.log('Raw Body', rawBody);
     if(!this.slackService.verifyRequest(xSlackSignature, xSlackRequestTimeStamp, rawBody)) {
       return this.logger.warn('#slackCommandZc() : リクエスト不正・反応しない', request.headers);
     }

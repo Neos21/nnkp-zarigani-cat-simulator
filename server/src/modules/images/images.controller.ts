@@ -18,7 +18,7 @@ export class ImagesController {
   }
   
   @Post('')
-  @UseInterceptors(FileInterceptor('file'))  // TODO : カスタム次第でファイル形式や容量をチェックできるみたい
+  @UseInterceptors(FileInterceptor('file'))
   public async uploadFile(
     @UploadedFile() file: Express.Multer.File,
     @Body('credential') credential: string,
@@ -28,15 +28,19 @@ export class ImagesController {
     const isValidCredential = this.imagesService.validateCredential(credential);
     if(!isValidCredential) return response.status(HttpStatus.BAD_REQUEST).json({ error: 'Invalid Credential '});
     
-    // TODO : fileName の命名規則チェック const regex = /^[a-z0-9]+(-?[a-z0-9]+)*$/;
-    // - `^[a-z0-9]+` : 文字列は半角の小文字英字または数字で始まり、1文字以上の文字列が必要。
-    // - `(-?[a-z0-9]+)*` : ハイフンを挟んで再び小文字英字または数字が続くことを許容。ただし、ハイフンが連続することや先頭・末尾にあることは不可。
-    // - この正規表現により、先頭と末尾にハイフンがないことを保証しつつ、文字列の間にハイフンを1つだけ許容します。
+    const isAllowedFileType = this.imagesService.validateFileType(file.mimetype);
+    if(!isAllowedFileType) return response.status(HttpStatus.BAD_REQUEST).json({ error: 'Invalid File Type' });
     
-    const exists = await this.imagesService.existsFile(fileName);
+    const isValidFileSize = this.imagesService.validateFileSize(file.size);
+    if(!isValidFileSize) return response.status(HttpStatus.BAD_REQUEST).json({ error: 'The File Size Exceeds Or 0 Bytes' });
+    
+    const isValidFileName = this.imagesService.validateFileName(fileName);
+    if(!isValidFileName) return response.status(HttpStatus.BAD_REQUEST).json({ error: 'Invalid File Name' });
+    
+    const exists = await this.imagesService.existsFile(fileName);  // `file.originalname` でオリジナルのファイル名を拾っても良さそう
     if(exists) return response.status(HttpStatus.BAD_REQUEST).json({ error: 'The File Name Already Exists' });
     
-    const isSucceeded = await this.imagesService.uploadFile(file, fileName);
+    const isSucceeded = await this.imagesService.saveFile(file, fileName);  // ファイル保存
     if(!isSucceeded) return response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: 'Failed To Upload File' });
     
     return response.status(HttpStatus.CREATED).end();
@@ -54,7 +58,7 @@ export class ImagesController {
     const exists = await this.imagesService.existsFile(fileName);
     if(!exists) return response.status(HttpStatus.BAD_REQUEST).json({ error: 'The File Name Does Not Exist' });
     
-    const isSucceeded = await this.imagesService.deleteFile(fileName);
+    const isSucceeded = await this.imagesService.removeFile(fileName);
     if(!isSucceeded) return response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: 'Failed To Delete File' });
     
     return response.status(HttpStatus.OK).end();

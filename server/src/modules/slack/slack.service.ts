@@ -124,7 +124,13 @@ export class SlackService {
     }
   }
   
-  /** Slack からのリクエストか否か検証する : 参考 https://github.com/slackapi/bolt-js/blob/main/src/receivers/verify-request.ts */
+  /**
+   * Slack からのリクエストか否か検証する
+   * 
+   * - 参考 : https://github.com/slackapi/bolt-js/blob/main/src/receivers/verify-request.ts
+   * - 参考 : https://gist.github.com/Alasano/c66f6e5c03518306ba94cf2ea4617bfc
+   * - 参考 : https://dev.to/soumyadey/verifying-requests-from-slack-the-correct-method-for-nodejs-417i
+   */
   public verifyRequest(xSlackSignature: string, xSlackRequestTimeStamp: string, rawBody: string): boolean {
     const xSlackRequestTimeStampNumber = Number(xSlackRequestTimeStamp);
     if(Number.isNaN(xSlackRequestTimeStampNumber)) {
@@ -149,7 +155,7 @@ export class SlackService {
     }
     const hmac = createHmac('sha256', this.slackSigningSecret);
     hmac.update(`${signatureVersion}:${xSlackRequestTimeStampNumber}:${rawBody}`);
-    const ourSignatureHash = 'v0=' + hmac.digest('hex');
+    const ourSignatureHash = hmac.digest('hex');
     if(!signatureHash || !tsscmp(signatureHash, ourSignatureHash)) {
       this.logger.error('Signature Mismatch', signatureHash, ourSignatureHash);
       return false;

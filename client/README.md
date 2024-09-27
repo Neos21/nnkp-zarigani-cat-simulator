@@ -9,6 +9,10 @@ $ npm install
 # 開発用 Hot Reload サーバを起動する
 $ npm run dev
 
+  # バックエンドとの通信部分は `vite.config.ts` 設定でプロキシしてあるので、別途バックエンドの開発用サーバを起動しておく
+  $ cd ../server/
+  $ npm run dev
+
 # 本番用に型チェック後ビルドする
 $ npm run build
 
