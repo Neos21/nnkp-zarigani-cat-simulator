@@ -149,7 +149,7 @@ export class SlackService {
     }
     const hmac = createHmac('sha256', this.slackSigningSecret);
     hmac.update(`${signatureVersion}:${xSlackRequestTimeStampNumber}:${rawBody}`);
-    const ourSignatureHash = hmac.digest('hex');
+    const ourSignatureHash = 'v0=' + hmac.digest('hex');
     if(!signatureHash || !tsscmp(signatureHash, ourSignatureHash)) {
       this.logger.error('Signature Mismatch', signatureHash, ourSignatureHash);
       return false;

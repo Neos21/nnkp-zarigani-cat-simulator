@@ -9,8 +9,18 @@ import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  // JSON を解釈できるようにする
-  app.use(express.json());
+  // JSON を解釈できるようにする・Slack 用の rawBody を追加する https://dev.to/soumyadey/verifying-requests-from-slack-the-correct-method-for-nodejs-417i
+  app.use(express.json({
+    verify: (req: any, _, buf) => {
+      req.rawBody = buf;
+    }
+  }));
+  app.use(express.urlencoded({
+    extended: true,
+    verify: (req: any, _, buf) => {
+      req.rawBody = buf;
+    }
+  }));
   // CORS を有効にする
   app.enableCors({
     origin: (/localhost/u),  // `localhost` を全て許可するため正規表現を使う
