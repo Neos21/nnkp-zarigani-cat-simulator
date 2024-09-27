@@ -39,7 +39,7 @@ export class ImagesService {
     return inputCredential === this.credential;
   }
   
-  public async isExistFile(fileName: string): Promise<boolean> {
+  public async existsFile(fileName: string): Promise<boolean> {
     return await fs.access(path.resolve(this.imagesDirectoryPath, fileName)).then(() => true).catch(_error => false);
   }
   

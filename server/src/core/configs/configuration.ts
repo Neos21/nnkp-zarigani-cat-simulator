@@ -58,5 +58,6 @@ export const configuration = (): { [key: string]: string | number | boolean } =>
   staticDirectoryPath : getStringValue ('STATIC_DIRECTORY_PATH', path.resolve(__dirname, '../../../../client/dist')  ),  // 静的ファイルのディレクトリ
   imagesDirectoryPath : getStringValue ('IMAGES_DIRECTORY_PATH', path.resolve(__dirname, '../../../../public/images')),  // 画像ファイルのディレクトリ
   slackBotToken       : getStringValue ('SLACK_BOT_TOKEN'      , 'xoxb-DUMMY' ),  // Slack Bot トークン (`xoxb-` 始まり)
+  slackSigningSecret  : getStringValue ('SLACK_SIGNING_SECRET' , 'xxxx-DUMMY' ),  // Slack Signing Secret
   noColour            : getBooleanValue('NO_COLOR'                            )   // ロガーの色付けをしない : NestJS のロガー `cli-colors.util.js` と同じ環境変数名・確認のため宣言
 });

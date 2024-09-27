@@ -8,7 +8,7 @@ import { listRoutes } from './core/utils/list-routes';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { rawBody: true });
   // JSON を解釈できるようにする
   app.use(express.json());
   // CORS を有効にする

@@ -1,6 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import fetch from 'node-fetch';
+import { createHmac } from 'crypto';
+import tsscmp from 'tsscmp';
 
 import { Message } from '../../providers/providers';
 import { nexraAryahcrCc } from '../../providers/nexra-aryahcr-cc';
@@ -10,11 +12,13 @@ import { nexraAryahcrCc } from '../../providers/nexra-aryahcr-cc';
 export class SlackService {
   private readonly logger: Logger = new Logger(SlackService.name);
   private readonly slackBotToken: string;
+  private readonly slackSigningSecret: string;
   
   constructor(
     private readonly configService: ConfigService
   ) {
-    this.slackBotToken = this.configService.get('slackBotToken');
+    this.slackBotToken      = this.configService.get('slackBotToken');
+    this.slackSigningSecret = this.configService.get('slackSigningSecret');
   }
   
   /** メンションへの返信処理 */
@@ -118,5 +122,40 @@ export class SlackService {
     catch(error) {
       this.logger.warn('#zcCommand() : 返信失敗 …', error);
     }
+  }
+  
+  /** Slack からのリクエストか否か検証する : 参考 https://github.com/slackapi/bolt-js/blob/main/src/receivers/verify-request.ts */
+  public async verifyRequest(xSlackSignature: string, xSlackRequestTimeStamp: string, rawBody: string): boolean {
+    const xSlackRequestTimeStampNumber = Number(xSlackRequestTimeStamp);
+    if(Number.isNaN(xSlackRequestTimeStampNumber)) {
+      this.logger.error('Header x-slack-request-timestamp Did Not Have The Expected Type', xSlackRequestTimeStamp);
+      return false;
+    }
+    
+    const nowMs = Date.now();
+    const requestTimestampMaxDeltaMinutes = 5;
+    const fiveMinutesAgoSec = Math.floor(nowMs / 1000) - 60 * requestTimestampMaxDeltaMinutes;
+    // 古いリクエストを弾く
+    if (xSlackRequestTimeStampNumber < fiveMinutesAgoSec) {
+      this.logger.error(`Header x-slack-request-timestamp Must Differ From System Time By No More Than ${requestTimestampMaxDeltaMinutes} Minutes Or Request Is Stale`);
+      return false;
+    }
+    
+    // シグネチャを確認する
+    const [signatureVersion, signatureHash] = xSlackSignature.split('=');
+    if(signatureVersion !== 'v0') {
+      this.logger.error('Unknown Signature Version', signatureVersion, xSlackSignature);
+      return false;
+    }
+    const hmac = createHmac('sha256', this.slackSigningSecret);
+    hmac.update(`${signatureVersion}:${xSlackRequestTimeStampNumber}:${rawBody}`);
+    const ourSignatureHash = hmac.digest('hex');
+    if(!signatureHash || !tsscmp(signatureHash, ourSignatureHash)) {
+      this.logger.error('Signature Mismatch', signatureHash, ourSignatureHash);
+      return false;
+    }
+    
+    // 認証成功
+    return true;
   }
 }

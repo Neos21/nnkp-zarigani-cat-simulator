@@ -18,7 +18,7 @@ export class ImagesController {
   }
   
   @Post('')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('file'))  // TODO : カスタム次第でファイル形式や容量をチェックできるみたい
   public async uploadFile(
     @UploadedFile() file: Express.Multer.File,
     @Body('credential') credential: string,
@@ -28,7 +28,12 @@ export class ImagesController {
     const isValidCredential = this.imagesService.validateCredential(credential);
     if(!isValidCredential) return response.status(HttpStatus.BAD_REQUEST).json({ error: 'Invalid Credential '});
     
-    const exists = await this.imagesService.isExistFile(fileName);
+    // TODO : fileName の命名規則チェック const regex = /^[a-z0-9]+(-?[a-z0-9]+)*$/;
+    // - `^[a-z0-9]+` : 文字列は半角の小文字英字または数字で始まり、1文字以上の文字列が必要。
+    // - `(-?[a-z0-9]+)*` : ハイフンを挟んで再び小文字英字または数字が続くことを許容。ただし、ハイフンが連続することや先頭・末尾にあることは不可。
+    // - この正規表現により、先頭と末尾にハイフンがないことを保証しつつ、文字列の間にハイフンを1つだけ許容します。
+    
+    const exists = await this.imagesService.existsFile(fileName);
     if(exists) return response.status(HttpStatus.BAD_REQUEST).json({ error: 'The File Name Already Exists' });
     
     const isSucceeded = await this.imagesService.uploadFile(file, fileName);
@@ -46,7 +51,7 @@ export class ImagesController {
     const isValidCredential = this.imagesService.validateCredential(credential);
     if(!isValidCredential) return response.status(HttpStatus.BAD_REQUEST).json({ error: 'Invalid Credential '});
     
-    const exists = await this.imagesService.isExistFile(fileName);
+    const exists = await this.imagesService.existsFile(fileName);
     if(!exists) return response.status(HttpStatus.BAD_REQUEST).json({ error: 'The File Name Does Not Exist' });
     
     const isSucceeded = await this.imagesService.deleteFile(fileName);

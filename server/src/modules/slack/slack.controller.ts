@@ -1,4 +1,4 @@
-import { Controller, Logger, Post, Req, Res } from '@nestjs/common';
+import { Controller, Logger, Post, RawBodyRequest, Req, Res } from '@nestjs/common';
 import { Request, Response } from 'express';
 
 import { SlackService } from './slack.service';
@@ -14,7 +14,7 @@ export class SlackController {
   
   /** Event Subscriptions 用エンドポイント */
   @Post('events')
-  public events(@Req() request: Request, @Res() response: Response): void {
+  public events(@Req() request: RawBodyRequest<Request> @Res() response: Response): void {
     // Event Subscriptions のリクエスト URL を検証するための応答 https://api.slack.com/events/url_verification
     if(request.body?.type === 'url_verification') {
       response.type('application/json').send({ challange: request.body.challenge });
@@ -29,6 +29,14 @@ export class SlackController {
       return this.logger.log(`#events() : Bot の投稿のため無視 … Bot ID : [${request.body.event.bot_id}]`);
     }
     
+    // Slack からのリクエストか否か認証する・失敗した場合は返信しない
+    const xSlackSignature        = String(request.headers['x-slack-signature']);
+    const xSlackRequestTimeStamp = String(request.headers['x-slack-request-timestamp']);
+    const rawBody                = request.rawBody.toString();
+    if(!this.slackService.verifyRequest(xSlackSignature, xSlackRequestTimeStamp, rawBody)) {
+      return this.logger.warn('#events() : リクエスト不正・反応しない', request.headers);
+    }
+    
     // メンションへの反応
     if(request.body?.event?.type === 'app_mention') {
       this.slackService.replyToMention(request.body.event.channel, request.body.event.text);  // Promise
@@ -39,15 +47,24 @@ export class SlackController {
       this.slackService.replyToDirectMessage(request.body.event.channel, request.body.event.text);  // Promise
       return this.logger.log('#events() : DM への反応');
     }
+    
     // その他イベント
-    this.logger.log('#events() : その他イベントのため無視');
+    this.logger.log('#events() : その他イベントのため無視', request.headers);
   }
   
   /** `/zc` スラッシュコマンド用エンドポイント */
   @Post('zc')
-  public slashCommandZc(@Req() request: Request, @Res() response: Response): void {
-    this.logger.log('#slackCommandZc() : Request Headers', request.headers);  // TODO : トークン検証が必要
+  public slashCommandZc(@Req() request: RawBodyRequest<Request>, @Res() response: Response): void {
     response.end();  // とりあえずレスポンスする・リプライは非同期に行う
+    
+    // Slack からのリクエストか否か認証する・失敗した場合は返信しない
+    const xSlackSignature        = String(request.headers['x-slack-signature']);
+    const xSlackRequestTimeStamp = String(request.headers['x-slack-request-timestamp']);
+    const rawBody                = request.rawBody.toString();
+    if(!this.slackService.verifyRequest(xSlackSignature, xSlackRequestTimeStamp, rawBody)) {
+      return this.logger.warn('#slackCommandZc() : リクエスト不正・反応しない', request.headers);
+    }
+    
     this.slackService.zcCommand(request.body?.text, request.body?.response_url);  // Promise
     this.logger.log('#slackCommandZc() : `/zc` スラッシュコマンドへの反応');
   }
