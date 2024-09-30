@@ -7,8 +7,13 @@
 html {
   overflow-y: scroll;
   height: 100%;
-  font-family: sans-serif;
+  color: #000;
+  font-family: "Zen Maru Gothic", YuGothic, "Yu Gothic", "Noto Sans Japanese", "Noto Sans JP", "Noto Sans CJK JP", "Hiragino Sans", "Hiragino Kaku Gothic ProN", Meiryo, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   line-height: 1.7;
+  background: 16px 16px
+              repeating-linear-gradient( 0deg, #fff3f3 0 1px, transparent 1px 16px),
+              repeating-linear-gradient(90deg, #fff3f3 0 1px, transparent 1px 16px),
+              #fff;
   cursor: default;
 }
 
