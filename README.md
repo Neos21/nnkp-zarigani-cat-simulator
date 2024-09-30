@@ -19,3 +19,9 @@ $ cd ./server/
 $ npm run build
 $ npm start
 ```
+
+---
+
+## Special Thanks
+
+- [でもでも (@taiki0915takaga@vivaldi.net) 様](https://social.vivaldi.net/@taiki0915takaga) … 画像提供
