@@ -8,7 +8,7 @@ const imageFileNames: Array<string> = [];
  * @return 画像ファイル名一覧・キャッシュ済であればそれを返す
  * @
  */
-const fetchImageFileNames: Promise<Array<string>> = async () => {
+const fetchImageFileNames: () => Promise<Array<string>> = async () => {
   if(imageFileNames.length !== 0) return imageFileNames;
   
   const imageFileNamesResponse = await fetch('/api/images');
@@ -37,7 +37,7 @@ const inputTextModel = defineModel('inputTextModel');
 /** 送信ボタン押下時の処理 */
 const onSubmit = async () => {
   // Validate
-  const inputText = inputTextModel.value.trim();
+  const inputText = (inputTextModel.value as string).trim();
   if(inputText === '') return alert('質問文を打ち込んでください');  // エラーメッセージの出し方イマイチ…
   
   try {
@@ -65,7 +65,7 @@ const onSubmit = async () => {
   }
   catch(error) {
     console.error('Failed To Chat', error);
-    message.value = error.message;
+    message.value = (error as any).message;
   }
   finally {
     isProcessing.value = false;
