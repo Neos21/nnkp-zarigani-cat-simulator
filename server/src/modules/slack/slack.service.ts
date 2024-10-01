@@ -26,9 +26,8 @@ export class SlackService {
   /** メンションへの返信処理 */
   public async replyToMention(channelId: string, originalText: string): Promise<void> {
     try {  // https://api.slack.com/methods/chat.postMessage
-      // 一番動作が安定している Nexra AryahCR CC プロバイダを使ってみる
       const messages: Array<Message> = [
-        { role: 'user'     , content: 'あなたはザリガニ猫を飼っています。これから質問をしますので、ユーモアを交えて猫の状況について答えてください。' },
+        { role: 'user'     , content: 'あなたはザリガニ猫を飼っています。これから質問をしますので、ユーモアを交えてザリガニ猫の状況について答えてください。' },
         { role: 'assistant', content: 'もちろんです！では、どんな質問でも受け付けますよ。ザリガニ猫の飼い主の立場から楽しくお答えします。' },
         { role: 'user'     , content: originalText }
       ];
@@ -57,6 +56,7 @@ export class SlackService {
       this.logger.log('#replyToMention() : 返信成功', `【Q】${originalText}`, `【A】${responseText}`);
     }
     catch(error) {
+      this.sendLogToSlack('Slack メンション返信 : 失敗', originalText, error.toString());
       this.logger.warn('#replyToMention() : 返信失敗', `【Q】${originalText}`, error);
     }
   }
@@ -64,9 +64,8 @@ export class SlackService {
   /** メンションへの返信処理 */
   public async replyToDirectMessage(channelId: string, originalText: string): Promise<void> {
     try {
-      // 一番動作が安定している Nexra AryahCR CC プロバイダを使ってみる
       const messages: Array<Message> = [
-        { role: 'user'     , content: 'あなたはザリガニ猫を飼っています。これから質問をしますので、ユーモアを交えて猫の状況について答えてください。' },
+        { role: 'user'     , content: 'あなたはザリガニ猫を飼っています。これから質問をしますので、ユーモアを交えてザリガニ猫の状況について答えてください。' },
         { role: 'assistant', content: 'もちろんです！では、どんな質問でも受け付けますよ。ザリガニ猫の飼い主の立場から楽しくお答えします。' },
         { role: 'user'     , content: originalText }
       ];
@@ -94,6 +93,7 @@ export class SlackService {
       this.logger.log('#replyToDirectMessage() : 返信成功', `【Q】${originalText}`, `【A】${responseText}`);
     }
     catch(error) {
+      this.sendLogToSlack('Slack DM 返信 : 失敗', originalText, error.toString());
       this.logger.warn('#replyToDirectMessage() : 返信失敗', `【Q】${originalText}`, error);
     }
   }
@@ -101,9 +101,8 @@ export class SlackService {
   /** `/zc` スラッシュコマンドが呼び出された時の処理 */
   public async zcCommand(originalText: string, responseUrl: string): Promise<void> {
     try {
-      // 一番動作が安定している Nexra AryahCR CC プロバイダを使ってみる
       const messages: Array<Message> = [
-        { role: 'user'     , content: 'あなたはザリガニ猫を飼っています。これから質問をしますので、ユーモアを交えて猫の状況について答えてください。' },
+        { role: 'user'     , content: 'あなたはザリガニ猫を飼っています。これから質問をしますので、ユーモアを交えてザリガニ猫の状況について答えてください。' },
         { role: 'assistant', content: 'もちろんです！では、どんな質問でも受け付けますよ。ザリガニ猫の飼い主の立場から楽しくお答えします。' },
         { role: 'user'     , content: originalText }
       ];
@@ -126,9 +125,10 @@ export class SlackService {
       const text = await response.text();
       
       this.sendLogToSlack('Slack /zc コマンド返信', originalText, responseText);
-      this.logger.log('#zcCommand() : 返信成功',  `【Q】${originalText}`, `【A】${responseText}`, text);
+      this.logger.log('#zcCommand() : 返信成功', `【Q】${originalText}`, `【A】${responseText}`, text);
     }
     catch(error) {
+      this.sendLogToSlack('Slack /zc コマンド返信 : 失敗', originalText, error.toString());
       this.logger.warn('#zcCommand() : 返信失敗', `【Q】${originalText}`, error);
     }
   }

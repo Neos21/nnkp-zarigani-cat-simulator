@@ -18,9 +18,8 @@ export class ChatService {
   
   /** AI Chat 処理 */
   public async chat(inputText: string): Promise<string> {
-    // 一番動作が安定している Nexra AryahCR CC プロバイダを使ってみる
     const messages: Array<Message> = [
-      { role: 'user'     , content: 'あなたはザリガニ猫を飼っています。これから質問をしますので、ユーモアを交えて猫の状況について答えてください。' },
+      { role: 'user'     , content: 'あなたはザリガニ猫を飼っています。これから質問をしますので、ユーモアを交えてザリガニ猫の状況について答えてください。' },
       { role: 'assistant', content: 'もちろんです！では、どんな質問でも受け付けますよ。ザリガニ猫の飼い主の立場から楽しくお答えします。' },
       { role: 'user'     , content: inputText }
     ];
