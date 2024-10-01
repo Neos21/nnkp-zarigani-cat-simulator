@@ -123,7 +123,6 @@ const onClickImage = async () => {
     </div>
   </div>
 </Transition>
-<RouterLink to="/admin" class="admin-link">●</RouterLink>
 </template>
 
 <style scoped>
@@ -219,7 +218,9 @@ h1 {
         opacity: 1;  /* For iOS */
         cursor: not-allowed;
       }
-  /* .submit-button */
+  .submit-button {
+    margin-bottom: var(--space-default);
+  }
     .submit-button button {
       appearance: none;
       -webkit-appearance: none;
@@ -258,8 +259,8 @@ h1 {
 /* 画面幅が小さい時のレイアウト調整 */
 @media (max-width: 600px) {
   .wrapper {
-    --image-max-width : 280px;
-    --image-max-height: 250px;
+    --image-max-width : 290px;
+    --image-max-height: 260px;
   }
   
   h1 {
