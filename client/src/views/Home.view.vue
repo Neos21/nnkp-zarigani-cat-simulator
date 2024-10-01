@@ -203,6 +203,8 @@ h1 {
     margin-bottom: var(--space-default);
   }
     .textbox input {
+      appearance: none;
+      -webkit-appearance: none;
       width: calc(var(--image-max-width) - 2rem);
       border: 1.25px solid #ccc;
       border-radius: 6px;
@@ -214,10 +216,13 @@ h1 {
     }
       .textbox input:disabled {
         background: #f0f0f0;
+        opacity: 1;  /* For iOS */
         cursor: not-allowed;
       }
   /* .submit-button */
     .submit-button button {
+      appearance: none;
+      -webkit-appearance: none;
       border: 0;
       border-radius: 6px;
       padding: .45rem 1.5rem;
