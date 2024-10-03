@@ -78,19 +78,16 @@ const onFetchImages = async () => {
   grid-template-columns: 2.5rem auto 1fr;
   grid-template-areas: "id link tags";
 }
-
-.image-id {
-  grid-area: id;
-  text-align: right;
-}
-
-.image-link {
-  grid-area: link;
-}
-
-.image-tags {
-  grid-area: tags;
-}
+  .image-id {
+    grid-area: id;
+    text-align: right;
+  }
+  .image-link {
+    grid-area: link;
+  }
+  .image-tags {
+    grid-area: tags;
+  }
 
 /* 画面幅が小さい時のレイアウト調整 */
 @media (max-width: 600px) {

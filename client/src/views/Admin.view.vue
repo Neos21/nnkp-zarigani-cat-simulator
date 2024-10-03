@@ -84,10 +84,9 @@ form {
 .wrapper :deep(a) {
   color: #00f;
 }
-
-.wrapper :deep(a:hover) {
-  color: #f00;
-}
+  .wrapper :deep(a:hover) {
+    color: #f00;
+  }
 
 .wrapper :deep(h2) {
   margin: 0 0 1rem;

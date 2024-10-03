@@ -179,6 +179,9 @@ h3 {
   column-gap: .5rem;
   grid-template-columns: 2.5rem 1fr auto;
 }
+  .tag-row > div {
+    text-align: right;
+  }
 
 .controls {
   margin-top: 2rem;
@@ -186,10 +189,9 @@ h3 {
   column-gap: .5rem;
   grid-template-columns: 1fr 1fr;
 }
-
-.controls > :last-child {
-  text-align: right;
-}
+  .controls > :last-child {
+    text-align: right;
+  }
 
 .footer {
   margin-top: 2rem;

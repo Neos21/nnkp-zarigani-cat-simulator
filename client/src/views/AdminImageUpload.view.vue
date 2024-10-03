@@ -167,6 +167,10 @@ const onSubmit = async () => {
   max-width: 300px;  /* TODO : 画像プレビューのサイズ指定がテキトーすぎやしないか？ */
 }
 
+.add-tag {
+  text-align: right;
+}
+
 .tag-row {
   margin-bottom: .5rem;
   display: grid;
@@ -177,18 +181,13 @@ const onSubmit = async () => {
     text-align: right;
   }
 
-.add-tag {
-  text-align: right;
-}
-
 .controls {
   margin-top: 2rem;
   display: grid;
   column-gap: .5rem;
   grid-template-columns: 1fr 1fr;
 }
-
-.controls > :last-child {
-  text-align: right;
-}
+  .controls > :last-child {
+    text-align: right;
+  }
 </style>
