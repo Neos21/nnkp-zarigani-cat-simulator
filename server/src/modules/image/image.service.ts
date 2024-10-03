@@ -13,11 +13,9 @@ export class ImageService {
     this.imagesDirectoryPath = this.configService.get('imagesDirectoryPath');
   }
   
-  /** ルート相対パスでファイル名一覧を返す */
+  /** ファイル名一覧を返す */
   public async listFileNames(): Promise<Array<string>> {
     const allFileNames = await fs.readdir(this.imagesDirectoryPath);  // NOTE : 指定のディレクトリ直下のファイルのみ
-    return allFileNames
-      .filter(fileName => fileName !== '.gitkeep')
-      .map(fileName => `/public/images/${fileName}`);
+    return allFileNames.filter(fileName => fileName !== '.gitkeep');
   }
 }

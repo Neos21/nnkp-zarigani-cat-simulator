@@ -13,7 +13,7 @@ const fetchImageFileNames: () => Promise<Array<string>> = async () => {
   const imageFileNamesResponse = await fetch('/api/image/get-file-names');
   if(!imageFileNamesResponse.ok) throw new Error('Failed To Fetch Image File Names');
   const imageFileNamesJson: Array<string> = await imageFileNamesResponse.json();
-  imageFileNames.push(...imageFileNamesJson);  // キャッシュに残す
+  imageFileNames.push(...imageFileNamesJson.map(imageFileName => `/public/images/${imageFileName}`));  // キャッシュに残す
   return imageFileNames;
 };
 

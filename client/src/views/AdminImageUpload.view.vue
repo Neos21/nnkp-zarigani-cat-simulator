@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 
-/** タグ1要素を示す型 (`v-for` 内で `v-model` を用いるためにオブジェクトが必要だったため定義する) */
-type Tag = { index: number, value: string; };
+import type { Tag } from '../types/tag';
 
 /** フォーム要素の参照 */
 const form = ref();
@@ -13,7 +12,7 @@ let file: File | null = null;
 const fileSrc = ref<string>('');
 /** タグのリスト */
 const tags = ref<Array<Tag>>([
-  { index: 0, value: '' }  // デフォルト値として1行置いておく
+  { id: 0, value: '' }  // デフォルト値として1行置いておく
 ]);
 
 /** `[type="file"]` に対して `v-model` は使えないので `v-on:change` で監視する */
@@ -41,8 +40,9 @@ const onRemoveTag = (index: number) => {
 
 /** タグを末尾に1行追加する */
 const onAddTag = () => {
-  const newIndex = tags.value.length + 1;  // TODO : この採番方法だと `index` 値が重複する場合がある・一意に Index を決められるようにするか nanoid のように一意になる ID を採番するべき
-  tags.value.push({ index: newIndex, value: '' });
+  const currentMaxId = Math.max(...tags.value.map(tag => tag.id));
+  const newId = currentMaxId + 1;
+  tags.value.push({ id: newId, value: '' });
 };
 
 /** リセットボタン押下時に「アップロード対象ファイル」の参照を削除し、タグを1行に戻す */
@@ -50,7 +50,7 @@ const onReset = () => {
   file = null;
   fileSrc.value = '';
   
-  tags.value = [{ index: 0, value: '' }];
+  tags.value = [{ id: 0, value: '' }];
 };
 
 /** アップロードボタン押下時 */

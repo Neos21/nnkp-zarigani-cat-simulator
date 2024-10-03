@@ -38,6 +38,13 @@ export class ImagesService {
     return db.data;
   }
   
+  public async getFile(id: number): Promise<DbItem | null> {
+    const db = await JSONFilePreset<DbData>(this.imagesDbFilePath, []);
+    const image = db.data.find(item => item.id === id);
+    if(image == null) return null;
+    return image;
+  }
+  
   public validateCredential(inputCredential: string): boolean {
     return inputCredential === this.credential;
   }

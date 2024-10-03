@@ -1,19 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 
-/** API からはスネークケースで返しているのでその型の定義 */
-type ApiImage = {
-  id: number,
-  file_name: string,
-  tags: Array<string>
-};
-
-// TODO : 型定義はどこかで共通化したいわねー
-type Image = {
-  id: number,
-  fileName: string,
-  tags: Array<string>
-};
+import type { ApiImage, Image } from '../types/image';
+import LoadingComponent from '../components/Loading.component.vue';
+import ErrorMessageComponent from '../components/ErrorMessage.component.vue';
 
 const isLoading = ref<boolean>(true);
 const errorMessage = ref<string>('');
@@ -55,9 +45,9 @@ const onFetchImages = async () => {
 
 <template>
 <h2>アップロード済み画像一覧</h2>
-<p v-if="isLoading" class="loading">Loading...</p>
+<LoadingComponent v-if="isLoading" />
 <div v-else-if="errorMessage">
-  <p class="error">Error : {{ errorMessage }}</p>
+  <ErrorMessageComponent v-bind:error-message="errorMessage" />
   <p><button type="button" @click="onFetchImages">再読込</button></p>
 </div>
 <p v-else-if="images.length === 0">アップロード済みの画像はありません。</p>
@@ -71,16 +61,6 @@ const onFetchImages = async () => {
 </template>
 
 <style scoped>
-.loading {
-  color: #eb0;
-  font-weight: bold;
-}
-
-.error {
-  color: #f00;
-  font-weight: bold;
-}
-
 .images {
   font-family: monospace;
 }

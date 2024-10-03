@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpStatus, Post, Query, Res, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpStatus, Param, Post, Query, Res, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
 
@@ -18,6 +18,17 @@ export class ImagesController {
     
     const fileNames = await this.imagesService.listFiles();
     return response.status(HttpStatus.OK).json({ results: fileNames });
+  }
+  
+  @Get(':id')
+  public async getFile(@Param('id') id: string, @Query('credential') credential: string, @Res() response: Response): Promise<Response> {
+    const isValidCredential = this.imagesService.validateCredential(credential);
+    if(!isValidCredential) return response.status(HttpStatus.BAD_REQUEST).json({ error: 'Invalid Credential '});
+    
+    const image = await this.imagesService.getFile(Number(id));  // `@Param()` は必ず `string` なので型変換して渡す
+    if(image == null) return response.status(HttpStatus.BAD_REQUEST).json({ error: 'The Image Of The ID Does Not Exist' });
+    
+    return response.status(HttpStatus.OK).json({ result: image });
   }
   
   @Post('')
