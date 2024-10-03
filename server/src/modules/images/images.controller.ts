@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpStatus, Post, Res, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, HttpStatus, Post, Res, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
 
@@ -10,12 +10,6 @@ export class ImagesController {
   constructor(
     private readonly imagesService: ImagesService
   ) { }
-  
-  @Get('')
-  public async listFileNames(@Res() response: Response): Promise<Response> {
-    const fileNames = await this.imagesService.listFileNames();
-    return response.status(HttpStatus.OK).json(fileNames);
-  }
   
   @Post('')
   @UseInterceptors(FileInterceptor('file'))

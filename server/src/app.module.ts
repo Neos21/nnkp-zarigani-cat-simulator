@@ -6,6 +6,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { configuration } from './core/configs/configuration';
 import { SlackModule } from './modules/slack/slack.module';
 import { ImagesModule } from './modules/images/images.module';
+import { ImageModule } from './modules/image/image.module';
 import { ChatModule } from './modules/chat/chat.module';
 // Controllers
 import { AppController } from './app.controller';
@@ -39,6 +40,7 @@ import { AccessLogMiddleware } from './core/middlewares/access-log.middleware';
     }),
     SlackModule,
     ImagesModule,
+    ImageModule,
     ChatModule
   ],
   controllers: [
