@@ -146,7 +146,7 @@ const onUpdate = async () => {
   <p class="add-tag"><button type="button" @click="onAddTag">タグを追加</button></p>
   <div class="tags" v-for="(tag, index) in tags" v-bind:key="tag as unknown as PropertyKey">
     <div class="tag-row">
-      <span>{{ index + 1 }}</span>
+      <div>{{ index + 1 }}</div>
       <input type="text" v-model="tag.value" placeholder="タグ">
       <button type="button" @click="onRemoveTag(index)" v-bind:disabled="index === 0">削除</button>  <!-- 1行目は削除できないようにしておく -->
     </div>
