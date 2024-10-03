@@ -35,7 +35,6 @@ export class SlackService {
       const responseText = result == null
         ? 'メンションありがとうございます。\n申し訳ありませんが、ザリガニねこの様子が分かりませんでした。'
         : `メンションにお答えします!\n\n${result}`;
-      this.logger.log('#replyToMention()')
       
       const response = await fetch('https://slack.com/api/chat.postMessage', {
         method: 'POST',
