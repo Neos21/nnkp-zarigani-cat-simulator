@@ -4,7 +4,3 @@ Thumbs.db
 .env
 
 node_modules/
-
-# アップロードされた画像はひとまず Git 管理に含めないことにする
-public/images/*
-!public/images/.gitkeep
