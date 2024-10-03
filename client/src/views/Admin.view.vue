@@ -7,8 +7,6 @@ const errorMessage   = ref<string | null>(null);
 
 (async () => {
   try {
-    await new Promise(resolve => setTimeout(resolve, 2000));  // 動作確認用の Wait
-    
     const response = await fetch('/api/images');
     if(!response.ok) throw new Error('Failed To Fetch Image File Names');
     const json = await response.json();
@@ -25,6 +23,7 @@ const errorMessage   = ref<string | null>(null);
 </script>
 
 <template>
+<div class="wrapper">
   <h2>Admin</h2>
   <div v-if="isLoading" class="loading">読み込み中……</div>
   <div v-else-if="errorMessage" class="error">{{ errorMessage }}</div>
@@ -37,9 +36,16 @@ const errorMessage   = ref<string | null>(null);
       </li>
     </ul>
   </div>
+  <hr>
+  <p><RouterLink to="/">トップに戻る</RouterLink></p>
+</div>
 </template>
 
 <style scoped>
+.wrapper {
+  padding: 1px 0;  /* 子要素の Margin によるズレ回避 */
+}
+
 .loading {
   color: #eb0;
   font-weight: bold;
