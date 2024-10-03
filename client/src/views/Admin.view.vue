@@ -1,58 +1,71 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
+import { useRoute } from 'vue-router';
 
-const isLoading      = ref<boolean>(true);
-const imageFileNames = ref<Array<string>>([]);
-const errorMessage   = ref<string | null>(null);
+const credential = ref<string>('');
 
-(async () => {
-  try {
-    const response = await fetch('/api/images');
-    if(!response.ok) throw new Error('Failed To Fetch Image File Names');
-    const json = await response.json();
-    imageFileNames.value = json;
-  }
-  catch(error) {
-    console.error('Admin View : Failed To Fetch Image File Names', error);
-    errorMessage.value = 'Error : 画像ファイル名一覧の取得に失敗しました';
-  }
-  finally {
-    isLoading.value = false;
-  }
+// フッターリンクの表示切替用
+const currentRoutePath = ref<string>('');
+
+/** Credential を LocalStorage に保存する */
+const onSubmit = () => {
+  const inputCredential = credential.value;
+  if(inputCredential === '') return console.log('Credential 未入力');
+  
+  localStorage.setItem('credential', inputCredential);
+  alert('Credential を保存しました');  // TODO : `alert()` で表示するのダサくない？
+};
+
+/** 初期表示時に LocalStorage に保存されている Credential を復元する */
+(() => {
+  const storedCredential = localStorage.getItem('credential');
+  if(storedCredential != null && storedCredential !== '') credential.value = storedCredential;
+  
+  const route = useRoute();
+  currentRoutePath.value = route.path;
+  watch(() => route.path, () => {
+    currentRoutePath.value = route.path;
+  });
 })();
 </script>
 
 <template>
 <div class="wrapper">
-  <h2>Admin</h2>
-  <div v-if="isLoading" class="loading">読み込み中……</div>
-  <div v-else-if="errorMessage" class="error">{{ errorMessage }}</div>
-  <div v-else>
-    <h3>アップロード済み画像ファイル名一覧</h3>
-    <p v-if="imageFileNames.length === 0">画像ファイルはありません。</p>
-    <ul v-else>
-      <li v-for="imageFileName in imageFileNames" v-bind:key="imageFileName">
-        <a v-bind:href="`/public/images/${imageFileName}`" target="_blank">{{ imageFileName }}</a>
-      </li>
-    </ul>
-  </div>
+  <h1>Admin</h1>
+  
+  <form @submit.prevent="onSubmit">
+    <input type="text" v-model="credential" placeholder="Credential">
+    <button type="submit">保存</button>
+  </form>
+  
+  <RouterView />
+  
   <hr>
-  <p><RouterLink to="/">トップに戻る</RouterLink></p>
+  <div class="footer">
+    <p><RouterLink to="/admin" v-if="currentRoutePath !== '/admin'">管理画面トップに戻る</RouterLink></p>
+    <p><RouterLink to="/" v-if="currentRoutePath === '/admin'">Indexに戻る</RouterLink></p>
+  </div>
 </div>
 </template>
 
 <style scoped>
 .wrapper {
-  padding: 1px 0;  /* 子要素の Margin によるズレ回避 */
+  min-height: 100%;
+  padding: 1rem;  /* 子要素の Margin によるズレ回避も兼ねて Margin ではなく Padding を使う */
+  background: #fff;
 }
 
-.loading {
-  color: #eb0;
-  font-weight: bold;
+h1 {
+  margin-top: 0;
 }
 
-.error {
-  color: #f00;
-  font-weight: bold;
+form {
+  display: grid;
+  column-gap: .5rem;
+  grid-template-columns: 1fr auto;
+}
+
+.footer {
+  text-align: right;
 }
 </style>

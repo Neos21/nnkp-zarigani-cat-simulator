@@ -55,8 +55,9 @@ const getBooleanValue = (envName: string): boolean => {
 export const configuration = (): { [key: string]: string | number | boolean } => ({
   port                : getNumberValue ('PORT'                 , 5000         ),  // ポート番号
   credential          : getStringValue ('CREDENTIAL'           , 'CHANGE-THIS'),  // クレデンシャル
-  staticDirectoryPath : getStringValue ('STATIC_DIRECTORY_PATH', path.resolve(__dirname, '../../../../client/dist')  ),  // 静的ファイルのディレクトリ
-  imagesDirectoryPath : getStringValue ('IMAGES_DIRECTORY_PATH', path.resolve(__dirname, '../../../../public/images')),  // 画像ファイルのディレクトリ
+  staticDirectoryPath : getStringValue ('STATIC_DIRECTORY_PATH', path.resolve(__dirname, '../../../../client/dist')),     // 静的ファイルのディレクトリ
+  imagesDirectoryPath : getStringValue ('IMAGES_DIRECTORY_PATH', path.resolve(__dirname, '../../../../public/images')),   // 画像ファイルのディレクトリ
+  imagesDbFilePath    : getStringValue ('IMAGES_DB_FILE_PATH'  , path.resolve(__dirname, '../../../../db/images.json')),  // 画像に関する DB のファイルパス
   slackBotToken       : getStringValue ('SLACK_BOT_TOKEN'      , 'xoxb-DUMMY' ),  // Slack Bot トークン (`xoxb-` 始まり)
   slackSigningSecret  : getStringValue ('SLACK_SIGNING_SECRET' , 'xxxx-DUMMY' ),  // Slack Signing Secret
   slackWebhookUrl     : getStringValue ('SLACK_WEBHOOK_URL'    , ''           ),  // Slack Webhook URL

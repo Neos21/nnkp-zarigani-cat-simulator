@@ -7,16 +7,17 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      name: 'home',
       component: HomeView
     },
     {
       path: '/admin',
-      name: 'admin',
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      component: () => import('../views/Admin.view.vue')
+      component: () => import('../views/Admin.view.vue'),
+      children: [
+        { path: ''          , component: () => import('../views/AdminHome.view.vue') },
+        { path: 'upload'    , component: () => import('../views/AdminImageUpload.view.vue') },
+        { path: 'images'    , component: () => import('../views/AdminImageList.view.vue') },
+        { path: 'images/:id', component: () => import('../views/AdminImageEdit.view.vue') }
+      ]
     }
   ]
 });

@@ -27,3 +27,26 @@ body {
   max-width: 960px;
   margin: 0 auto;
 }
+
+input[type="text"],
+button {
+  font-size: 17px;  /* iOS で画面拡大が発生しないようにする */
+}
+
+input[type="text"] {
+  min-width: 0;
+}
+
+input[type="file"],
+::file-selector-button {
+  cursor: pointer;
+}
+
+button {
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+:disabled {
+  cursor: not-allowed !important;
+}
