@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 
 import type { ApiImage, Image } from '../types/image';
 import type { Tag } from '../types/tag';
@@ -61,14 +61,63 @@ const onAddTag = () => {
   tags.value!.push({ id: newId, value: '' });
 };
 
+const router = useRouter();
 const onDelete = async () => {
   if(!confirm('本当に削除しますか？')) return console.log('削除確認ダイアログをキャンセル');
   
-  // TODO : 削除 API を呼ぶ
+  // Credential
+  const credential = localStorage.getItem('credential');
+  if(credential == null || credential === '') return alert('Credential を設定してください');  // TODO : `alert()` で表示するのダサくない？
+  
+  try {
+    const response = await fetch(`/api/images/${id.value}?credential=${credential}`, { method: 'DELETE' });
+    if(!response.ok) {
+      const json = await response.json().catch(_error => null);
+      throw new Error(json == null ? '原因不明のエラー' : json.error);
+    }
+    
+    alert('画像情報を削除しました');  // TODO : `alert()` で表示するのダサくない？
+    
+    // 一覧に移動する
+    router.push('/admin/images');
+  }
+  catch(error) {
+    console.error('画像削除失敗', error);
+    alert('画像削除に失敗しました。もう一度やり直してください');  // TODO : `alert()` で表示するのダサくない？
+  }
 };
 
 const onUpdate = async () => {
-  // TODO : 更新 API を呼ぶ
+  // Credential
+  const credential = localStorage.getItem('credential');
+  if(credential == null || credential === '') return alert('Credential を設定してください');  // TODO : `alert()` で表示するのダサくない？
+  
+  // タグ
+  const tagValues = tags.value!.map(tag => tag.value);
+  if(tagValues.some(tagValue => tagValue.trim() === '')) return alert('未入力のタグ行があります');  // TODO : `alert()` で表示するのダサくない？
+  
+  try {
+    const response = await fetch(`/api/images/${id.value}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        credential: credential,
+        tags: tagValues
+      })
+    });
+    if(!response.ok) {
+      const json = await response.json().catch(_error => null);
+      throw new Error(json == null ? '原因不明のエラー' : json.error);
+    }
+    
+    alert('タグ情報を更新しました');  // TODO : `alert()` で表示するのダサくない？
+  }
+  catch(error) {
+    console.error('更新失敗', error);
+    alert('更新に失敗しました。もう一度やり直してください');  // TODO : `alert()` で表示するのダサくない？
+  }
 };
 
 (async () => {

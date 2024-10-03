@@ -63,8 +63,8 @@ const onSubmit = async () => {
   if(file == null) return alert('画像を選択してください');  // TODO : `alert()` で表示するのダサくない？
   
   // タグ
-  const tagValues = tags.value.map(tag => tag.value);  // TODO : スペースだけ入力した行は OK 扱いになってしまうのを直したい
-  if(tagValues.some(tagValue => tagValue === '')) return alert('未入力のタグ行があります');  // TODO : `alert()` で表示するのダサくない？
+  const tagValues = tags.value.map(tag => tag.value);
+  if(tagValues.some(tagValue => tagValue.trim() === '')) return alert('未入力のタグ行があります');  // TODO : `alert()` で表示するのダサくない？
   
   try {
     const formData = new FormData();

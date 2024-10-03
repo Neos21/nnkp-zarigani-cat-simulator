@@ -92,7 +92,7 @@ export class ImagesService {
       const db = await JSONFilePreset<DbData>(this.imagesDbFilePath, []);
       const currentMaxId = db.data.length ? Math.max(...db.data.map(item => item.id)) : 0;
       const newId = currentMaxId + 1;
-      const item = {
+      const item: DbItem = {
         id       : newId,
         file_name: fileName,
         tags     : tags
@@ -106,8 +106,35 @@ export class ImagesService {
     }
   }
   
-  public async existsFile(fileName: string): Promise<boolean> {
-    return await fs.access(path.resolve(this.imagesDirectoryPath, fileName)).then(() => true).catch(_error => false);
+  public async updateDb(id: number, tags: Array<string>): Promise<boolean> {
+    try {
+      const db = await JSONFilePreset<DbData>(this.imagesDbFilePath, []);
+      const targetIndex = db.data.findIndex(item => item.id === id);
+      if(targetIndex < 0) throw new Error('The Record Does Not Exist');
+      
+      db.data[targetIndex].tags = tags;  // タグ情報を差し替える
+      await db.write();
+      return true;
+    }
+    catch(_error) {
+      return false;
+    }
+  }
+  
+  public async deleteDb(id: number): Promise<string | null> {
+    try {
+      const db = await JSONFilePreset<DbData>(this.imagesDbFilePath, []);
+      const targetIndex = db.data.findIndex(item => item.id === id);
+      if(targetIndex < 0) throw new Error('The Record Does Not Exist');
+      
+      const fileName = db.data[targetIndex].file_name;
+      db.data.splice(targetIndex, 1);
+      await db.write();
+      return fileName;
+    }
+    catch(_error) {
+      return null;
+    }
   }
   
   public async removeFile(fileName: string): Promise<boolean> {

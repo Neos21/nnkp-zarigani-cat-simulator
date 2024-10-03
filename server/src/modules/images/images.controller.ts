@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpStatus, Param, Post, Query, Res, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpStatus, Param, Patch, Post, Query, Res, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
 
@@ -33,12 +33,7 @@ export class ImagesController {
   
   @Post('')
   @UseInterceptors(FileInterceptor('file'))
-  public async uploadFile(
-    @UploadedFile() file: Express.Multer.File,
-    @Body('credential') credential: string,
-    @Body('tags') tags: Array<string>,
-    @Res() response: Response
-  ): Promise<Response> {
+  public async uploadFile(@UploadedFile() file: Express.Multer.File, @Body('credential') credential: string, @Body('tags') tags: Array<string>, @Res() response: Response): Promise<Response> {
     const isValidCredential = this.imagesService.validateCredential(credential);
     if(!isValidCredential) return response.status(HttpStatus.BAD_REQUEST).json({ error: 'Invalid Credential '});
     
@@ -65,20 +60,30 @@ export class ImagesController {
     return response.status(HttpStatus.CREATED).end();
   }
   
-  @Delete('')
-  public async deleteFile(
-    @Body('credential') credential: string,
-    @Body('file_name') fileName: string,
-    @Res() response: Response
-  ): Promise<Response> {
+  @Patch(':id')
+  public async patchTags(@Param('id') id: string, @Body('credential') credential: string, @Body('tags') tags: Array<string>, @Res() response: Response): Promise<Response> {
     const isValidCredential = this.imagesService.validateCredential(credential);
     if(!isValidCredential) return response.status(HttpStatus.BAD_REQUEST).json({ error: 'Invalid Credential '});
     
-    const exists = await this.imagesService.existsFile(fileName);
-    if(!exists) return response.status(HttpStatus.BAD_REQUEST).json({ error: 'The File Name Does Not Exist' });
+    // DB のタグ情報を更新する
+    const isUpdatedDb = await this.imagesService.updateDb(Number(id), tags);
+    if(!isUpdatedDb) return response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: 'Failed To Update DB' });
     
-    const isSucceeded = await this.imagesService.removeFile(fileName);
-    if(!isSucceeded) return response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: 'Failed To Delete File' });
+    return response.status(HttpStatus.OK).end();
+  }
+  
+  @Delete(':id')
+  public async deleteFile(@Query('credential') credential: string, @Param('id') id: string, @Res() response: Response): Promise<Response> {
+    const isValidCredential = this.imagesService.validateCredential(credential);
+    if(!isValidCredential) return response.status(HttpStatus.BAD_REQUEST).json({ error: 'Invalid Credential '});
+    
+    // DB からレコードを削除し、削除したファイル名を返してもらう
+    const removedFileName = await this.imagesService.deleteDb(Number(id));
+    if(removedFileName == null) return response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: 'Failed To Delete DB' });
+    
+    // ファイルを削除する
+    const isRemovedFile = await this.imagesService.removeFile(removedFileName);
+    if(!isRemovedFile) return response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: 'Failed To Remove File' });
     
     return response.status(HttpStatus.OK).end();
   }
