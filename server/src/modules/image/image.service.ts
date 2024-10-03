@@ -15,7 +15,7 @@ export class ImageService {
   
   /** ファイル名一覧を返す */
   public async listFileNames(): Promise<Array<string>> {
-    const allFileNames = await fs.readdir(this.imagesDirectoryPath);  // NOTE : 指定のディレクトリ直下のファイルのみ
+    const allFileNames = await fs.readdir(this.imagesDirectoryPath);
     return allFileNames.filter(fileName => fileName !== '.gitkeep');
   }
 }

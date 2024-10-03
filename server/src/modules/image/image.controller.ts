@@ -12,7 +12,12 @@ export class ImageController {
   
   @Get('get-file-names')
   public async listFileNames(@Res() response: Response): Promise<Response> {
-    const fileNames = await this.imageService.listFileNames();
-    return response.status(HttpStatus.OK).json(fileNames);
+    try {
+      const fileNames = await this.imageService.listFileNames();
+      return response.status(HttpStatus.OK).json({ results: fileNames });
+    }
+    catch(error) {
+      return response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: error.toString() });
+    }
   }
 }
