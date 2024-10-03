@@ -9,7 +9,7 @@ const onSubmit = () => {
   if(inputCredential === '') return console.log('Credential 未入力');
   
   localStorage.setItem('credential', inputCredential);
-  alert('Credential を保存しました');
+  alert('Credential を保存しました');  // TODO : `alert()` で表示するのダサくない？
 };
 
 /** 初期表示時に LocalStorage に保存されている Credential を復元する */

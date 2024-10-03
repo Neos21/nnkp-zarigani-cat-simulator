@@ -23,7 +23,7 @@ const onChangeFile = (event: Event) => {
   
   if(!['.jpeg', '.jpg', '.gif', '.png'].some(extension => inputFile.name.endsWith(extension))) {
     console.warn('画像でないファイルが選択されました', inputFile);
-    return alert('画像でないファイルが選択されました');
+    return alert('画像でないファイルが選択されました');  // TODO : `alert()` で表示するのダサくない？
   }
   
   file = inputFile;  // ファイルを控えておく
@@ -57,14 +57,14 @@ const onReset = () => {
 const onSubmit = async () => {
   // Credential
   const credential = localStorage.getItem('credential');
-  if(credential == null || credential === '') return alert('Credential を設定してください');
+  if(credential == null || credential === '') return alert('Credential を設定してください');  // TODO : `alert()` で表示するのダサくない？
   
   // 画像ファイル
-  if(file == null) return alert('画像を選択してください');
+  if(file == null) return alert('画像を選択してください');  // TODO : `alert()` で表示するのダサくない？
   
   // タグ
-  const tagValues = tags.value.map(tag => tag.value);
-  if(tagValues.some(tagValue => tagValue === '')) return alert('未入力のタグ行があります');
+  const tagValues = tags.value.map(tag => tag.value);  // TODO : スペースだけ入力した行は OK 扱いになってしまうのを直したい
+  if(tagValues.some(tagValue => tagValue === '')) return alert('未入力のタグ行があります');  // TODO : `alert()` で表示するのダサくない？
   
   try {
     const formData = new FormData();
@@ -74,15 +74,14 @@ const onSubmit = async () => {
     tagValues.forEach(tagValue => formData.append('tags[]', tagValue));
     const response = await fetch('/api/images', {
       method: 'POST',
-      body: formData  // FormData を POST する際は Content-Type は指定しないこと : https://zenn.dev/kariya_mitsuru/articles/25c9aeb27059e7
+      body: formData  // NOTE : FormData を POST する際は Content-Type を指定しないこと : https://zenn.dev/kariya_mitsuru/articles/25c9aeb27059e7
     });
     if(!response.ok) {
       const json = await response.json().catch(_error => null);
       throw new Error(json == null ? '原因不明のエラー' : json.error);
     }
     
-    console.log('アップロード成功');
-    alert('アップロードできました');
+    alert('アップロードできました');  // TODO : `alert()` で表示するのダサくない？
     
     // フォームをリセットする
     form.value.reset();
@@ -90,7 +89,7 @@ const onSubmit = async () => {
   }
   catch(error) {
     console.error('アップロード失敗', error);
-    alert('アップロードに失敗しました。もう一度やり直してください');
+    alert('アップロードに失敗しました。もう一度やり直してください');  // TODO : `alert()` で表示するのダサくない？
   }
 };
 </script>
@@ -99,6 +98,7 @@ const onSubmit = async () => {
 <h2>画像アップロード</h2>
 <form @submit.prevent="onSubmit" ref="form">
   <p><input type="file" accept=".jpeg, .jpg, .gif, .png" @change="onChangeFile"></p>
+  <!-- TODO : プレビュー欄の出し方がダサくない？ -->
   <p class="image-preview" v-if="fileSrc !== ''">
     <img v-bind:src="fileSrc">
   </p>
@@ -123,7 +123,7 @@ const onSubmit = async () => {
 
 <style scoped>
 .image-preview img {
-  max-width: 300px;
+  max-width: 300px;  /* TODO : 画像プレビューのサイズ指定がテキトーすぎやしないか？ */
 }
 
 .tag-row {
