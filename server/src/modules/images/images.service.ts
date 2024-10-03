@@ -1,33 +1,32 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { JSONFilePreset } from 'src/low-db/presets';
+
+/** JSON DB の型 */
+type DbData = Array<{
+  id: number,
+  file_name: string,
+  tags: Array<string>
+}>;
 
 /** Images Service */
 @Injectable()
 export class ImagesService {
-  private readonly logger: Logger = new Logger(ImagesService.name);
+  /** アップロードできるファイルサイズの最大容量は 10MB までとする */
+  private readonly maxFileSizeByte: number = 10_000_000;
+  
   private readonly credential: string;
   private readonly imagesDirectoryPath: string;
+  private readonly imagesDbFilePath: string;
   
   constructor(
     private readonly configService: ConfigService
   ) {
     this.credential          = this.configService.get('credential');
     this.imagesDirectoryPath = this.configService.get('imagesDirectoryPath');
-    
-    // 対象のディレクトリが存在しなかった場合のために作成しておく
-    fs.access(this.imagesDirectoryPath)
-      .catch(error => {
-        this.logger.warn('#constructor() : The Images Directory Does Not Exist, Creating It', error);
-        return fs.mkdir(this.imagesDirectoryPath, { recursive: true })
-          .then(() => {
-            this.logger.log('#constructor() : The Image Directory Created');
-          });
-      })
-      .catch(error => {
-        this.logger.error('#constructor() : Failed To Create Images Directory', error);
-      });
+    this.imagesDbFilePath    = this.configService.get('imagesDbFilePath');
   }
   
   public async listFileNames(): Promise<Array<string>> {
@@ -39,6 +38,12 @@ export class ImagesService {
     return inputCredential === this.credential;
   }
   
+  public validateTags(tags: Array<string>): boolean {
+    if(tags == null || tags.length === 0) return false;
+    if(tags.some(tag => tag == null || tag.trim() === '')) return false;
+    return true;
+  }
+  
   public validateFileType(mimeType: string): boolean {
     const allowFileTypes = ['image/jpeg', 'image/jpg', 'image/gif', 'image/png'];
     return allowFileTypes.includes(mimeType);
@@ -46,22 +51,52 @@ export class ImagesService {
   
   public validateFileSize(fileSizeByte: number): boolean {
     if(fileSizeByte == null || fileSizeByte === 0) return false;  // ファイルサイズが 0 バイト (空ファイル) の場合
-    const maxFileSizeByte = 10_000_000;  // 10MB までとする
-    return fileSizeByte <= maxFileSizeByte;
+    return fileSizeByte <= this.maxFileSizeByte;
   }
   
-  public validateFileName(fileName: string): boolean {
-    // ファイル名は英小文字・数値・ハイフンのみを許容する・1文字以上入力されていること・ハイフンは先頭もしくは末尾に入力されないこと
-    return (/^[a-z0-9]+(-?[a-z0-9]+)*$/).test(path.parse(fileName).name);  // 拡張子を外して検証する
+  /** `YYYY-MM-DD-HH-mm-SS.EXT` なファイル名を組み立てる */
+  public createFileName(mimeType: string): string {
+    const fileExtension = ['image/jpeg', 'image/jpg'].includes(mimeType) ? '.jpg'
+      : mimeType === 'image/gif' ? '.gif'
+      : mimeType === 'image/png' ? '.png'
+      : '.unknown';
+    const jstNow = new Date(Date.now() + ((new Date().getTimezoneOffset() + (9 * 60)) * 60 * 1000));
+    const fileName = jstNow.getFullYear()
+              + '-' + ('0' + (jstNow.getMonth() + 1)).slice(-2)
+              + '-' + ('0' + jstNow.getDate()).slice(-2)
+              + '-' + ('0' + jstNow.getHours()).slice(-2)
+              + '-' + ('0' + jstNow.getMinutes()).slice(-2)
+              + '-' + ('0' + jstNow.getSeconds()).slice(-2)
+              + fileExtension;
+    return fileName;
+  }
+  
+  public async saveFile(file: Express.Multer.File, fileName: string): Promise<boolean> {
+    // `wx` フラグにより書き込みモードで開き、万が一同名ファイルが存在する場合はエラーとする
+    return await fs.writeFile(path.resolve(this.imagesDirectoryPath, fileName), file.buffer, { flag: 'wx' }).then(_result => true).catch(_error => false);
+  }
+  
+  public async insertDb(fileName: string, tags: Array<string>): Promise<boolean> {
+    try {
+      const db = await JSONFilePreset<DbData>(this.imagesDbFilePath, []);
+      const currentMaxId = db.data.length ? Math.max(...db.data.map(item => item.id)) : 0;
+      const newId = currentMaxId + 1;
+      const item = {
+        id       : newId,
+        file_name: fileName,
+        tags     : tags
+      };
+      db.data.push(item);
+      await db.write();
+      return true;
+    }
+    catch(_error) {
+      return false;
+    }
   }
   
   public async existsFile(fileName: string): Promise<boolean> {
     return await fs.access(path.resolve(this.imagesDirectoryPath, fileName)).then(() => true).catch(_error => false);
-  }
-  
-  public async saveFile(file: Express.Multer.File, fileName: string): Promise<boolean> {
-    // `wx` フラグにより書き込みモードで開き、同名ファイルが存在する場合はエラーとする
-    return await fs.writeFile(path.resolve(this.imagesDirectoryPath, fileName), file.buffer, { flag: 'wx' }).then(_result => true).catch(_error => false);
   }
   
   public async removeFile(fileName: string): Promise<boolean> {

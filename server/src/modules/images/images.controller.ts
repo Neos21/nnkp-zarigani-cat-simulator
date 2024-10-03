@@ -16,11 +16,14 @@ export class ImagesController {
   public async uploadFile(
     @UploadedFile() file: Express.Multer.File,
     @Body('credential') credential: string,
-    @Body('file_name') fileName: string,
+    @Body('tags') tags: Array<string>,
     @Res() response: Response
   ): Promise<Response> {
     const isValidCredential = this.imagesService.validateCredential(credential);
     if(!isValidCredential) return response.status(HttpStatus.BAD_REQUEST).json({ error: 'Invalid Credential '});
+    
+    const isValidTags = this.imagesService.validateTags(tags);
+    if(!isValidTags) return response.status(HttpStatus.BAD_REQUEST).json({ error: 'Invalid Tags' });
     
     const isAllowedFileType = this.imagesService.validateFileType(file.mimetype);
     if(!isAllowedFileType) return response.status(HttpStatus.BAD_REQUEST).json({ error: 'Invalid File Type' });
@@ -28,14 +31,16 @@ export class ImagesController {
     const isValidFileSize = this.imagesService.validateFileSize(file.size);
     if(!isValidFileSize) return response.status(HttpStatus.BAD_REQUEST).json({ error: 'The File Size Exceeds Or 0 Bytes' });
     
-    const isValidFileName = this.imagesService.validateFileName(fileName);
-    if(!isValidFileName) return response.status(HttpStatus.BAD_REQUEST).json({ error: 'Invalid File Name' });
+    // ファイル名を生成する
+    const fileName = this.imagesService.createFileName(file.mimetype);
     
-    const exists = await this.imagesService.existsFile(fileName);  // `file.originalname` でオリジナルのファイル名を拾っても良さそう
-    if(exists) return response.status(HttpStatus.BAD_REQUEST).json({ error: 'The File Name Already Exists' });
+    // ファイルを保存する
+    const isSavedFile = await this.imagesService.saveFile(file, fileName);
+    if(!isSavedFile) return response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: 'Failed To Save File' });
     
-    const isSucceeded = await this.imagesService.saveFile(file, fileName);  // ファイル保存
-    if(!isSucceeded) return response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: 'Failed To Upload File' });
+    // DB に登録する
+    const isInsertedDb = await this.imagesService.insertDb(fileName, tags);
+    if(!isInsertedDb) return response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: 'Failed To Insert DB' });
     
     return response.status(HttpStatus.CREATED).end();
   }
