@@ -41,7 +41,7 @@ const onRemoveTag = (index: number) => {
 
 /** タグを末尾に1行追加する */
 const onAddTag = () => {
-  const newIndex = tags.value.length + 1;
+  const newIndex = tags.value.length + 1;  // TODO : この採番方法だと `index` 値が重複する場合がある・一意に Index を決められるようにするか nanoid のように一意になる ID を採番するべき
   tags.value.push({ index: newIndex, value: '' });
 };
 
@@ -103,7 +103,7 @@ const onSubmit = async () => {
   </p>
   
   <hr>
-  <div class="tags" v-for="(tag, index) in tags" v-bind:key="index">
+  <div class="tags" v-for="(tag, index) in tags" v-bind:key="tag as unknown as PropertyKey">
     <div class="tag-row">
       <span>{{ index + 1 }}</span>
       <input type="text" v-model="tag.value" placeholder="タグ">
