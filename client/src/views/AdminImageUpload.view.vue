@@ -70,7 +70,6 @@ const onSubmit = async () => {
     const formData = new FormData();
     formData.append('credential', credential);
     formData.append('file', file, file.name);
-    formData.append('file_name', 'test.gif');
     tagValues.forEach(tagValue => formData.append('tags[]', tagValue));
     const response = await fetch('/api/images', {
       method: 'POST',
@@ -98,7 +97,7 @@ const onSubmit = async () => {
 <h2>画像アップロード</h2>
 <form @submit.prevent="onSubmit" ref="form">
   <p><input type="file" accept=".jpeg, .jpg, .gif, .png" @change="onChangeFile"></p>
-  <!-- TODO : プレビュー欄の出し方がダサくない？ -->
+  <!-- TODO : プレビュー欄の出し方・デザインがダサくない？ -->
   <p class="image-preview" v-if="fileSrc !== ''">
     <img v-bind:src="fileSrc">
   </p>
