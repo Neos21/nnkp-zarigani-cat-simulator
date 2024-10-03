@@ -12,7 +12,7 @@ const fetchImageFileNames: () => Promise<Array<string>> = async () => {
   
   const imageFileNamesResponse = await fetch('/api/image/get-file-names');
   if(!imageFileNamesResponse.ok) throw new Error('Failed To Fetch Image File Names');
-  const imageFileNamesJson = await imageFileNamesResponse.json();
+  const imageFileNamesJson: { results: Array<string> } = await imageFileNamesResponse.json();
   imageFileNames.push(...imageFileNamesJson.results.map(imageFileName => `/public/images/${imageFileName}`));  // キャッシュに残す
   return imageFileNames;
 };
@@ -66,7 +66,7 @@ const onSubmit = async () => {
   }
   catch(error) {
     console.error('AI チャット問い合わせに失敗', error);
-    message.value = (error as any).message ?? error.toString();
+    message.value = (error as any).message ?? (error as any).toString();
   }
   finally {
     isProcessing.value = false;
