@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, HttpStatus, Post, Res, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpStatus, Post, Query, Res, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
 
@@ -10,6 +10,15 @@ export class ImagesController {
   constructor(
     private readonly imagesService: ImagesService
   ) { }
+  
+  @Get('')
+  public async listFiles(@Query('credential') credential: string, @Res() response: Response): Promise<Response> {
+    const isValidCredential = this.imagesService.validateCredential(credential);
+    if(!isValidCredential) return response.status(HttpStatus.BAD_REQUEST).json({ error: 'Invalid Credential '});
+    
+    const fileNames = await this.imagesService.listFiles();
+    return response.status(HttpStatus.OK).json({ results: fileNames });
+  }
   
   @Post('')
   @UseInterceptors(FileInterceptor('file'))

@@ -1,7 +1,11 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
+import { useRoute } from 'vue-router';
 
 const credential = ref<string>('');
+
+// フッターリンクの表示切替用
+const currentRoutePath = ref<string>('');
 
 /** Credential を LocalStorage に保存する */
 const onSubmit = () => {
@@ -15,9 +19,13 @@ const onSubmit = () => {
 /** 初期表示時に LocalStorage に保存されている Credential を復元する */
 (() => {
   const storedCredential = localStorage.getItem('credential');
-  if(storedCredential == null || storedCredential === '') return console.log('保存済 Credential なし');
+  if(storedCredential != null && storedCredential !== '') credential.value = storedCredential;
   
-  credential.value = storedCredential;
+  const route = useRoute();
+  currentRoutePath.value = route.path;
+  watch(() => route.path, () => {
+    currentRoutePath.value = route.path;
+  });
 })();
 </script>
 
@@ -34,15 +42,15 @@ const onSubmit = () => {
   
   <hr>
   <div class="footer">
-    <p><RouterLink to="/admin">管理画面トップに戻る</RouterLink></p>
-    <p><RouterLink to="/">Indexに戻る</RouterLink></p>
+    <p><RouterLink to="/admin" v-if="currentRoutePath !== '/admin'">管理画面トップに戻る</RouterLink></p>
+    <p><RouterLink to="/" v-if="currentRoutePath === '/admin'">Indexに戻る</RouterLink></p>
   </div>
 </div>
 </template>
 
 <style scoped>
 .wrapper {
-  height: 100%;
+  min-height: 100%;
   padding: 1rem;  /* 子要素の Margin によるズレ回避も兼ねて Margin ではなく Padding を使う */
   background: #fff;
 }

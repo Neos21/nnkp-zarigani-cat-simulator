@@ -2,14 +2,18 @@ import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { JSONFilePreset } from 'src/low-db/presets';
 
-/** JSON DB の型 */
-type DbData = Array<{
+import { JSONFilePreset } from '../../low-db/presets';
+
+/** JSON DB の1要素の型 */
+type DbItem = {
   id: number,
   file_name: string,
   tags: Array<string>
-}>;
+};
+
+/** JSON DB の型 */
+type DbData = Array<DbItem>;
 
 /** Images Service */
 @Injectable()
@@ -29,9 +33,9 @@ export class ImagesService {
     this.imagesDbFilePath    = this.configService.get('imagesDbFilePath');
   }
   
-  public async listFileNames(): Promise<Array<string>> {
-    const allFileNames = await fs.readdir(this.imagesDirectoryPath);
-    return allFileNames.filter(fileName => fileName !== '.gitkeep');
+  public async listFiles(): Promise<Array<DbItem>> {
+    const db = await JSONFilePreset<DbData>(this.imagesDbFilePath, []);
+    return db.data;
   }
   
   public validateCredential(inputCredential: string): boolean {

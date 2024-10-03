@@ -13,9 +13,10 @@ const router = createRouter({
       path: '/admin',
       component: () => import('../views/Admin.view.vue'),
       children: [
-        { path: ''      , component: () => import('../views/AdminHome.view.vue') },
-        { path: 'upload', component: () => import('../views/AdminImageUpload.view.vue') },
-        { path: 'images', component: () => import('../views/AdminImageList.view.vue') }
+        { path: ''          , component: () => import('../views/AdminHome.view.vue') },
+        { path: 'upload'    , component: () => import('../views/AdminImageUpload.view.vue') },
+        { path: 'images'    , component: () => import('../views/AdminImageList.view.vue') },
+        { path: 'images/:id', component: () => import('../views/AdminImageEdit.view.vue') }
       ]
     }
   ]
