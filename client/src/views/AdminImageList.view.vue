@@ -5,10 +5,14 @@ import type { ApiImage, Image } from '../types/image';
 import LoadingComponent from '../components/Loading.component.vue';
 import ErrorMessageComponent from '../components/ErrorMessage.component.vue';
 
+/** 読み込み中か否か */
 const isLoading = ref<boolean>(true);
+/** 初期表示時にエラーがあった場合 */
 const errorMessage = ref<string>('');
+/** 画像情報一覧 */
 const images = ref<Array<Image>>([]);
 
+/** 画像情報一覧を取得する */
 const onFetchImages = async () => {
   isLoading.value = true;
   errorMessage.value = '';
@@ -16,7 +20,7 @@ const onFetchImages = async () => {
   
   try {
     const credential = localStorage.getItem('credential');
-    if(credential == null || credential === '') throw new Error('Credential を設定してください');
+    if(credential == null || credential === '') throw new Error('Credential を設定してください');  // TODO : `alert()` で表示するのダサくない？
     
     const response = await fetch(`/api/images?credential=${credential}`);
     const json = await response.json();
@@ -30,7 +34,7 @@ const onFetchImages = async () => {
     }));
   }
   catch(error) {
-    console.error('アップロード済み画像ファイル一覧取得失敗', error);
+    console.error('アップロード済み画像ファイル一覧の取得に失敗', error);
     errorMessage.value = (error as any).toString();
   }
   finally {
@@ -38,6 +42,7 @@ const onFetchImages = async () => {
   }
 };
 
+/** 初期表示時 */
 (async () => {
   await onFetchImages();
 })();
@@ -51,17 +56,48 @@ const onFetchImages = async () => {
   <p><button type="button" @click="onFetchImages">再読込</button></p>
 </div>
 <p v-else-if="images.length === 0">アップロード済みの画像はありません。</p>
-<ul v-else class="images">
-  <!-- TOOD : 一覧の見せ方がダサいのでなんとかしたい -->
-  <!-- TODO : 画像のプレビューとかどっかに表示できないかな -->
-  <li v-for="image in images" v-bind:key="image as unknown as PropertyKey">
-    [{{ image.id }}] <RouterLink v-bind:to="`/admin/images/${image.id}`">{{ image.fileName }}</RouterLink> … {{ image.tags }}
-  </li>
-</ul>
+<div v-else class="images">
+  <!-- TOOD : 一覧の見せ方がダサいのでなんとかしたい・画像のプレビューとかどっかに表示できないかな -->
+  <div class="image-row" v-for="image in images" v-bind:key="image as unknown as PropertyKey">
+    <div class="image-id">{{ image.id }}</div>
+    <RouterLink class="image-link" v-bind:to="`/admin/images/${image.id}`">{{ image.fileName }}</RouterLink>
+    <div class="image-tags">{{ image.tags }}</div>
+  </div>
+</div>
 </template>
 
 <style scoped>
 .images {
   font-family: monospace;
+}
+
+.image-row {
+  margin-bottom: .25rem;
+  display: grid;
+  column-gap: .5rem;
+  grid-template-columns: 2.5rem auto 1fr;
+  grid-template-areas: "id link tags";
+}
+
+.image-id {
+  grid-area: id;
+  text-align: right;
+}
+
+.image-link {
+  grid-area: link;
+}
+
+.image-tags {
+  grid-area: tags;
+}
+
+/* 画面幅が小さい時のレイアウト調整 */
+@media (max-width: 600px) {
+  .image-row {
+    grid-template-columns: 2.5rem 1fr;
+    grid-template-areas: "id link"
+                         "id tags";
+  }
 }
 </style>

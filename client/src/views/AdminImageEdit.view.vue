@@ -7,15 +7,21 @@ import type { Tag } from '../types/tag';
 import LoadingComponent from '../components/Loading.component.vue';
 import ErrorMessageComponent from '../components/ErrorMessage.component.vue';
 
+const route = useRoute();
+const router = useRouter();
+
+/** 読み込み中か否か */
 const isLoading = ref<boolean>(true);
+/** 初期表示時にエラーがあった場合 */
 const errorMessage = ref<string>('');
 /** 編集対象の ID */
 const id = ref<string>('');
-/** API からの取得結果を保持しておくモノ・`tags` のフォームは以下に切り出しているので未使用だが置いておく */
+/** API からの取得結果を保持しておく・`tags` のフォームは以下に切り出しているので未使用だが置いておく */
 const image = ref<Image>();
 /** タグのリスト (編集用フォーム・`ref<Image>` 内の配列操作が困難なため切り出す) */
 const tags = ref<Array<Tag>>();
 
+/** 画像情報を取得する */
 const onFetchImage = async () => {
   isLoading.value = true;
   errorMessage.value = '';
@@ -23,7 +29,7 @@ const onFetchImage = async () => {
   
   try {
     const credential = localStorage.getItem('credential');
-    if(credential == null || credential === '') throw new Error('Credential を設定してください');
+    if(credential == null || credential === '') throw new Error('Credential を設定してください');  // TODO : `alert()` で表示するのダサくない？
     
     const response = await fetch(`/api/images/${id.value}?credential=${credential}`);
     const json = await response.json();
@@ -36,12 +42,12 @@ const onFetchImage = async () => {
       tags    : result.tags
     };
     tags.value = result.tags.map((tag, index) => ({
-      id: index,
+      id   : index,
       value: tag
     }));
   }
   catch(error) {
-    console.error('画像情報取得失敗', error);
+    console.error('画像情報の取得に失敗', error);
     errorMessage.value = (error as any).toString();
   }
   finally {
@@ -61,9 +67,9 @@ const onAddTag = () => {
   tags.value!.push({ id: newId, value: '' });
 };
 
-const router = useRouter();
+/** 画像情報を削除する */
 const onDelete = async () => {
-  if(!confirm('本当に削除しますか？')) return console.log('削除確認ダイアログをキャンセル');
+  if(!confirm('本当に削除しますか？')) return console.log('削除確認ダイアログをキャンセル');  // TODO : `confirm()` で確認するのダサくない？
   
   // Credential
   const credential = localStorage.getItem('credential');
@@ -78,15 +84,16 @@ const onDelete = async () => {
     
     alert('画像情報を削除しました');  // TODO : `alert()` で表示するのダサくない？
     
-    // 一覧に移動する
+    // アップロード済み画像一覧に移動する
     router.push('/admin/images');
   }
   catch(error) {
-    console.error('画像削除失敗', error);
+    console.error('画像情報の削除に失敗', error);
     alert('画像削除に失敗しました。もう一度やり直してください');  // TODO : `alert()` で表示するのダサくない？
   }
 };
 
+/** 更新ボタン押下時 */
 const onUpdate = async () => {
   // Credential
   const credential = localStorage.getItem('credential');
@@ -99,12 +106,10 @@ const onUpdate = async () => {
   try {
     const response = await fetch(`/api/images/${id.value}`, {
       method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         credential: credential,
-        tags: tagValues
+        tags      : tagValues
       })
     });
     if(!response.ok) {
@@ -115,15 +120,14 @@ const onUpdate = async () => {
     alert('タグ情報を更新しました');  // TODO : `alert()` で表示するのダサくない？
   }
   catch(error) {
-    console.error('更新失敗', error);
+    console.error('画像情報の更新に失敗', error);
     alert('更新に失敗しました。もう一度やり直してください');  // TODO : `alert()` で表示するのダサくない？
   }
 };
 
+/** 初期表示時 */
 (async () => {
-  const route = useRoute();
   id.value = route.params.id as string;
-  
   await onFetchImage();
 })();
 </script>
@@ -136,10 +140,10 @@ const onUpdate = async () => {
   <p><button type="button" @click="onFetchImage">再読込</button></p>
 </div>
 <div v-else-if="image != null && tags != null">
-  <h3>[{{ image.id }}] : {{ image.fileName }}</h3>
+  <h3>ID [{{ image.id }}] : {{ image.fileName }}</h3>
   <p class="image-preview"><img v-bind:src="`/public/images/${image.fileName}`"></p>
   
-  <hr>
+  <p class="add-tag"><button type="button" @click="onAddTag">タグを追加</button></p>
   <div class="tags" v-for="(tag, index) in tags" v-bind:key="tag as unknown as PropertyKey">
     <div class="tag-row">
       <span>{{ index + 1 }}</span>
@@ -147,9 +151,7 @@ const onUpdate = async () => {
       <button type="button" @click="onRemoveTag(index)" v-bind:disabled="index === 0">削除</button>  <!-- 1行目は削除できないようにしておく -->
     </div>
   </div>
-  <p class="add-tag"><button type="button" @click="onAddTag">タグを追加</button></p>
   
-  <hr>
   <div class="controls">
     <p><button type="button" @click="onDelete">画像を削除する</button></p>
     <p><button type="button" @click="onUpdate">更新</button></p>
@@ -159,28 +161,38 @@ const onUpdate = async () => {
 </template>
 
 <style scoped>
+h3 {
+  margin: 0 0 1rem;
+}
+
 .image-preview img {
   max-width: 300px;  /* TODO : 画像プレビューのサイズ指定がテキトーすぎやしないか？ */
 }
 
+.add-tag {
+  text-align: right;
+}
+
 .tag-row {
+  margin-bottom: .5rem;
   display: grid;
   column-gap: .5rem;
   grid-template-columns: 2.5rem 1fr auto;
 }
 
 .controls {
+  margin-top: 2rem;
   display: grid;
   column-gap: .5rem;
   grid-template-columns: 1fr 1fr;
 }
 
-.controls > p:last-child {
+.controls > :last-child {
   text-align: right;
 }
 
-.add-tag,
 .footer {
+  margin-top: 2rem;
   text-align: right;
 }
 </style>

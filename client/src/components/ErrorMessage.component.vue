@@ -3,7 +3,7 @@ interface ErrorMessage {
   errorMessage: string
 }
 
-const props = withDefaults(defineProps<ErrorMessage>(), { errorMessage: 'エラー' });
+const props = withDefaults(defineProps<ErrorMessage>(), { errorMessage: '不明なエラー' });
 </script>
 
 <template>
