@@ -6,18 +6,14 @@ const imageFileNames: Array<string> = [];
  * API をコールして画像ファイル名一覧を取得する
  * 
  * @return 画像ファイル名一覧・キャッシュ済であればそれを返す
- * @
  */
 const fetchImageFileNames: () => Promise<Array<string>> = async () => {
   if(imageFileNames.length !== 0) return imageFileNames;
   
-  const imageFileNamesResponse = await fetch('/api/images');
+  const imageFileNamesResponse = await fetch('/api/image/get-file-names');
   if(!imageFileNamesResponse.ok) throw new Error('Failed To Fetch Image File Names');
   const imageFileNamesJson: Array<string> = await imageFileNamesResponse.json();
-  
-  // ファイルパスを調整する
-  const renamedImageFileNames = imageFileNamesJson.map(imageFileName => `/public/images/${imageFileName}`);
-  imageFileNames.push(...renamedImageFileNames);  // キャッシュに残す
+  imageFileNames.push(...imageFileNamesJson);  // キャッシュに残す
   return imageFileNames;
 };
 
@@ -209,7 +205,6 @@ h1 {
       border-radius: 6px;
       padding: .4rem .75rem;
       color: inherit;
-      font-size: 17px;
       font-family: inherit !important;
       background: #fff;
     }
@@ -228,12 +223,10 @@ h1 {
       border-radius: 6px;
       padding: .45rem 1.5rem;
       color: inherit;
-      font-size: 17px;
       font-family: inherit !important;
       font-weight: normal;
       line-height: 1.25;
       background: #ffc2c2;
-      cursor: pointer;
     }
       /* Hover・Focus 時の色は現状適当 */
       .submit-button button:hover {
@@ -244,7 +237,6 @@ h1 {
       }
       .submit-button button:disabled {
         background: #e0e0e0;
-        cursor: not-allowed;
       }
 
 .admin-link {
