@@ -92,7 +92,7 @@ export class SlackService {
   public verifyRequest(xSlackSignature: string, xSlackRequestTimeStamp: string, rawBody: string): boolean {
     const xSlackRequestTimeStampNumber = Number(xSlackRequestTimeStamp);
     if(Number.isNaN(xSlackRequestTimeStampNumber)) {
-      this.logger.error('Header x-slack-request-timestamp Did Not Have The Expected Type', xSlackRequestTimeStamp);
+      this.logger.error(`Header x-slack-request-timestamp Did Not Have The Expected Type : [${xSlackRequestTimeStamp}]`);
       return false;
     }
     
@@ -108,7 +108,7 @@ export class SlackService {
     // シグネチャを確認する
     const [signatureVersion, signatureHash] = xSlackSignature.split('=');
     if(signatureVersion !== 'v0') {
-      this.logger.error('Unknown Signature Version', signatureVersion, xSlackSignature);
+      this.logger.error(`Unknown Signature Version : Signature [${signatureVersion}] x-slack-signature [${xSlackSignature}]`);
       return false;
     }
     const hmac = createHmac('sha256', this.slackSigningSecret);

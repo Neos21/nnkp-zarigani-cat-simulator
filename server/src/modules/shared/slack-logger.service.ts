@@ -21,7 +21,7 @@ export class SlackLoggerService {
    * @param outputText 出力文字列 (Slack 通知の3行目、「【A】」の後に記載する)
    */
   public async notify(title: string, inputText: string, outputText: string): Promise<void> {
-    this.logger.warn('#notify() :', { title, inputText, outputText });
+    this.logger.log('#notify() :', { title, inputText, outputText });
     if(this.slackWebhookUrl == null || this.slackWebhookUrl === '') {
       return this.logger.warn('#notify() : Slack Webhook URL が未指定のためログ送信なし');
     }
