@@ -5,7 +5,9 @@ import { nexraAryahcrCc } from '../src/providers/nexra-aryahcr-cc';
 (async () => {
   try {
     const messages: Array<Message> = [
-      { role: 'user', content: 'あなたは猫を飼っています。ユーモアを交えて猫の状況を教えてください。' }
+      { role: 'user'     , content: 'あなたはザリガニ猫を飼っています。これから質問をしますので、ユーモアを交えてザリガニ猫の状況について答えてください。1行目には「喜怒哀楽」のいずれか1文字で表現した感情パラメーターを答え、2行目から回答を書いてください。' },
+      { role: 'assistant', content: 'もちろんです！では、どんな質問でも受け付けますよ。ザリガニ猫の飼い主の立場から楽しくお答えします。' },
+      { role: 'user'     , content: 'ザリガニ猫がイライラするときは？' }
     ];
     const text = await nexraAryahcrCc(messages);
     console.log(text);

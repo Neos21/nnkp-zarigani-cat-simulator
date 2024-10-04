@@ -1,68 +1,70 @@
 // https://github.com/typicode/lowdb/blob/1b004c8228029161a15b557ba0bb638eaad3fd4b/src/adapters/node/TextFile.ts
-import { PathLike, readFileSync, renameSync, writeFileSync } from 'node:fs'
-import { readFile } from 'node:fs/promises'
-import path from 'node:path'
+import { PathLike, readFileSync, renameSync, writeFileSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
 
-import { Writer } from './steno'
+import { Writer } from './steno';
 
-import { Adapter, SyncAdapter } from './core-low'
+import { Adapter, SyncAdapter } from './core-low';
 
 export class TextFile implements Adapter<string> {
-  #filename: PathLike
-  #writer: Writer
+  #filename: PathLike;
+  #writer: Writer;
   
   constructor(filename: PathLike) {
-    this.#filename = filename
-    this.#writer = new Writer(filename)
+    this.#filename = filename;
+    this.#writer = new Writer(filename);
   }
   
-  async read(): Promise<string | null> {
-    let data
+  public async read(): Promise<string | null> {
+    let data;
     
     try {
-      data = await readFile(this.#filename, 'utf-8')
-    } catch (e) {
-      if ((e as NodeJS.ErrnoException).code === 'ENOENT') {
-        return null
+      data = await readFile(this.#filename, 'utf-8');
+    }
+    catch(error) {
+      if((error as NodeJS.ErrnoException).code === 'ENOENT') {
+        return null;
       }
-      throw e
+      throw error;
     }
     
-    return data
+    return data;
   }
   
-  write(str: string): Promise<void> {
-    return this.#writer.write(str)
+  public async write(str: string): Promise<void> {
+    return await this.#writer.write(str);
   }
 }
 
 export class TextFileSync implements SyncAdapter<string> {
-  #tempFilename: PathLike
-  #filename: PathLike
+  #tempFilename: PathLike;
+  #filename: PathLike;
   
   constructor(filename: PathLike) {
-    this.#filename = filename
-    const f = filename.toString()
-    this.#tempFilename = path.join(path.dirname(f), `.${path.basename(f)}.tmp`)
+    this.#filename = filename;
+    const f = filename.toString();
+    this.#tempFilename = path.join(path.dirname(f), `.${path.basename(f)}.tmp`);
   }
   
-  read(): string | null {
-    let data
+  public read(): string | null {
+    let data;
     
     try {
-      data = readFileSync(this.#filename, 'utf-8')
-    } catch (e) {
-      if ((e as NodeJS.ErrnoException).code === 'ENOENT') {
-        return null
+      data = readFileSync(this.#filename, 'utf-8');
+    }
+    catch(error) {
+      if((error as NodeJS.ErrnoException).code === 'ENOENT') {
+        return null;
       }
-      throw e
+      throw error;
     }
     
-    return data
+    return data;
   }
   
-  write(str: string): void {
-    writeFileSync(this.#tempFilename, str)
-    renameSync(this.#tempFilename, this.#filename)
+  public write(str: string): void {
+    writeFileSync(this.#tempFilename, str);
+    renameSync(this.#tempFilename, this.#filename);
   }
 }

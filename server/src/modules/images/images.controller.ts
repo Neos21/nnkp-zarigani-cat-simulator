@@ -13,78 +13,99 @@ export class ImagesController {
   
   @Get('')
   public async listFiles(@Query('credential') credential: string, @Res() response: Response): Promise<Response> {
-    const isValidCredential = this.imagesService.validateCredential(credential);
-    if(!isValidCredential) return response.status(HttpStatus.BAD_REQUEST).json({ error: 'Invalid Credential '});
+    try {
+      this.imagesService.validateCredential(credential);
+    }
+    catch(error) {
+      return response.status(HttpStatus.BAD_REQUEST).json({ error: error.toString() });
+    }
     
-    const fileNames = await this.imagesService.listFiles();
-    return response.status(HttpStatus.OK).json({ results: fileNames });
+    try {
+      const fileNames = await this.imagesService.listFiles();
+      return response.status(HttpStatus.OK).json({ results: fileNames });
+    }
+    catch(error) {
+      return response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: error.toString() });
+    }
   }
   
   @Get(':id')
   public async getFile(@Param('id') id: string, @Query('credential') credential: string, @Res() response: Response): Promise<Response> {
-    const isValidCredential = this.imagesService.validateCredential(credential);
-    if(!isValidCredential) return response.status(HttpStatus.BAD_REQUEST).json({ error: 'Invalid Credential '});
+    try {
+      this.imagesService.validateCredential(credential);
+    }
+    catch(error) {
+      return response.status(HttpStatus.BAD_REQUEST).json({ error: error.toString() });
+    }
     
-    const image = await this.imagesService.getFile(Number(id));  // `@Param()` は必ず `string` なので型変換して渡す
-    if(image == null) return response.status(HttpStatus.BAD_REQUEST).json({ error: 'The Image Of The ID Does Not Exist' });
-    
-    return response.status(HttpStatus.OK).json({ result: image });
+    try {
+      const image = await this.imagesService.getFile(Number(id));  // `@Param()` は必ず `string` なので型変換して渡す
+      if(image == null) return response.status(HttpStatus.BAD_REQUEST).json({ error: '指定 ID の画像情報は存在しませんでした' });
+      return response.status(HttpStatus.OK).json({ result: image });
+    }
+    catch(error) {
+      return response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: error.toString() });
+    }
   }
   
   @Post('')
   @UseInterceptors(FileInterceptor('file'))
   public async uploadFile(@UploadedFile() file: Express.Multer.File, @Body('credential') credential: string, @Body('tags') tags: Array<string>, @Res() response: Response): Promise<Response> {
-    const isValidCredential = this.imagesService.validateCredential(credential);
-    if(!isValidCredential) return response.status(HttpStatus.BAD_REQUEST).json({ error: 'Invalid Credential '});
+    try {
+      this.imagesService.validateCredential(credential);
+      this.imagesService.validateTags(tags);
+      this.imagesService.validateFileType(file.mimetype)
+      this.imagesService.validateFileSize(file.size)
+    }
+    catch(error) {
+      return response.status(HttpStatus.BAD_REQUEST).json({ error: error.toString() });
+    }
     
-    const isValidTags = this.imagesService.validateTags(tags);
-    if(!isValidTags) return response.status(HttpStatus.BAD_REQUEST).json({ error: 'Invalid Tags' });
-    
-    const isAllowedFileType = this.imagesService.validateFileType(file.mimetype);
-    if(!isAllowedFileType) return response.status(HttpStatus.BAD_REQUEST).json({ error: 'Invalid File Type' });
-    
-    const isValidFileSize = this.imagesService.validateFileSize(file.size);
-    if(!isValidFileSize) return response.status(HttpStatus.BAD_REQUEST).json({ error: 'The File Size Exceeds Or 0 Bytes' });
-    
-    // ファイル名を生成する
-    const fileName = this.imagesService.createFileName(file.mimetype);
-    
-    // ファイルを保存する
-    const isSavedFile = await this.imagesService.saveFile(file, fileName);
-    if(!isSavedFile) return response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: 'Failed To Save File' });
-    
-    // DB に登録する
-    const isInsertedDb = await this.imagesService.insertDb(fileName, tags);
-    if(!isInsertedDb) return response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: 'Failed To Insert DB' });
-    
-    return response.status(HttpStatus.CREATED).end();
+    try {
+      const fileName = this.imagesService.createFileName(file.mimetype);
+      await this.imagesService.saveFile(file, fileName);  // ファイルを保存する
+      await this.imagesService.insertDb(fileName, tags);  // DB に登録する
+      return response.status(HttpStatus.CREATED).end();
+    }
+    catch(error) {
+      return response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: error.toString() });
+    }
   }
   
   @Patch(':id')
   public async patchTags(@Param('id') id: string, @Body('credential') credential: string, @Body('tags') tags: Array<string>, @Res() response: Response): Promise<Response> {
-    const isValidCredential = this.imagesService.validateCredential(credential);
-    if(!isValidCredential) return response.status(HttpStatus.BAD_REQUEST).json({ error: 'Invalid Credential '});
+    try {
+      this.imagesService.validateCredential(credential);
+    }
+    catch(error) {
+      return response.status(HttpStatus.BAD_REQUEST).json({ error: error.toString() });
+    }
     
-    // DB のタグ情報を更新する
-    const isUpdatedDb = await this.imagesService.updateDb(Number(id), tags);
-    if(!isUpdatedDb) return response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: 'Failed To Update DB' });
-    
-    return response.status(HttpStatus.OK).end();
+    try {
+      await this.imagesService.updateDb(Number(id), tags);  // DB のタグ情報を更新する
+      return response.status(HttpStatus.OK).end();  // 特に何も返さない
+    }
+    catch(error) {
+      return response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: error.toString() });
+    }
   }
   
   @Delete(':id')
   public async deleteFile(@Query('credential') credential: string, @Param('id') id: string, @Res() response: Response): Promise<Response> {
-    const isValidCredential = this.imagesService.validateCredential(credential);
-    if(!isValidCredential) return response.status(HttpStatus.BAD_REQUEST).json({ error: 'Invalid Credential '});
+    try {
+      this.imagesService.validateCredential(credential);
+    }
+    catch(error) {
+      return response.status(HttpStatus.BAD_REQUEST).json({ error: error.toString() });
+    }
     
-    // DB からレコードを削除し、削除したファイル名を返してもらう
-    const removedFileName = await this.imagesService.deleteDb(Number(id));
-    if(removedFileName == null) return response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: 'Failed To Delete DB' });
-    
-    // ファイルを削除する
-    const isRemovedFile = await this.imagesService.removeFile(removedFileName);
-    if(!isRemovedFile) return response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: 'Failed To Remove File' });
-    
-    return response.status(HttpStatus.OK).end();
+    try {
+      const fileNameToRemove = await this.imagesService.deleteDb(Number(id));  // DB からレコードを削除し、削除するファイル名を返してもらう
+      await this.imagesService.removeFile(fileNameToRemove);  // ファイルを削除する
+      return response.status(HttpStatus.NO_CONTENT).end();  // 特に何も返さない
+    }
+    catch(error) {
+      return response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: error.toString() });
+    }
   }
 }

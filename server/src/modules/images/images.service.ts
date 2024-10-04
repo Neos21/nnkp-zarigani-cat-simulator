@@ -1,139 +1,137 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
-import { JSONFilePreset } from '../../low-db/presets';
-
-/** JSON DB の1要素の型 */
-type DbItem = {
-  id: number,
-  file_name: string,
-  tags: Array<string>
-};
-
-/** JSON DB の型 */
-type DbData = Array<DbItem>;
+import { JsonDbService } from '../shared/json-db.service';
+import { JstService } from '../shared/jst.service';
+import type { ImageDbItem } from '../../types/image';
 
 /** Images Service */
 @Injectable()
 export class ImagesService {
-  /** アップロードできるファイルサイズの最大容量は 10MB までとする */
-  private readonly maxFileSizeByte: number = 10_000_000;
+  /** アップロードできるファイルサイズの最大容量は 5MB までとする */
+  private readonly maxFileSizeByte: number = 5_000_000;
+  /** 許容する MIME Type */
+  private readonly allowMimeTypes: Array<string> = ['image/jpeg', 'image/gif', 'image/png'];
   
+  private readonly logger: Logger = new Logger(ImagesService.name);
   private readonly credential: string;
   private readonly imagesDirectoryPath: string;
-  private readonly imagesDbFilePath: string;
   
   constructor(
-    private readonly configService: ConfigService
+    private readonly configService: ConfigService,
+    private readonly jsonDbService: JsonDbService,
+    private readonly jstService: JstService
   ) {
     this.credential          = this.configService.get('credential');
     this.imagesDirectoryPath = this.configService.get('imagesDirectoryPath');
-    this.imagesDbFilePath    = this.configService.get('imagesDbFilePath');
   }
   
-  public async listFiles(): Promise<Array<DbItem>> {
-    const db = await JSONFilePreset<DbData>(this.imagesDbFilePath, []);
+  public validateCredential(inputCredential: string): void {
+    if(inputCredential !== this.credential) throw new Error('Credential が正しくありません');
+  }
+  
+  public async listFiles(): Promise<Array<ImageDbItem>> {
+    const db = await this.jsonDbService.readDb();
     return db.data;
   }
   
-  public async getFile(id: number): Promise<DbItem | null> {
-    const db = await JSONFilePreset<DbData>(this.imagesDbFilePath, []);
+  public async getFile(id: number): Promise<ImageDbItem | null> {
+    const db = await this.jsonDbService.readDb();
     const image = db.data.find(item => item.id === id);
-    if(image == null) return null;
-    return image;
+    return image ?? null;
   }
   
-  public validateCredential(inputCredential: string): boolean {
-    return inputCredential === this.credential;
+  public validateTags(tags: Array<string>): void {
+    if(tags == null || tags.length === 0) throw new Error('タグ情報が一つもありません');
+    if(tags.some(tag => tag == null || tag.trim() === '')) throw new Error('未入力のタグ情報があります');
   }
   
-  public validateTags(tags: Array<string>): boolean {
-    if(tags == null || tags.length === 0) return false;
-    if(tags.some(tag => tag == null || tag.trim() === '')) return false;
-    return true;
+  public validateFileType(mimeType: string): void {
+    if(!this.allowMimeTypes.includes(mimeType)) throw new Error('許容されていない MIME Type です');
   }
   
-  public validateFileType(mimeType: string): boolean {
-    const allowFileTypes = ['image/jpeg', 'image/jpg', 'image/gif', 'image/png'];
-    return allowFileTypes.includes(mimeType);
+  public validateFileSize(fileSizeByte: number): void {
+    if(fileSizeByte == null || fileSizeByte === 0) throw new Error('ファイルサイズが 0 バイトです');
+    if(fileSizeByte > this.maxFileSizeByte) throw new Error('ファイルサイズが許容量を超えています');
   }
   
-  public validateFileSize(fileSizeByte: number): boolean {
-    if(fileSizeByte == null || fileSizeByte === 0) return false;  // ファイルサイズが 0 バイト (空ファイル) の場合
-    return fileSizeByte <= this.maxFileSizeByte;
-  }
-  
-  /** `YYYY-MM-DD-HH-mm-SS.EXT` なファイル名を組み立てる */
+  /** `YYYY-MM-DD-HH-mm-SS.extension` なファイル名を組み立てる */
   public createFileName(mimeType: string): string {
-    const fileExtension = ['image/jpeg', 'image/jpg'].includes(mimeType) ? '.jpg'
-      : mimeType === 'image/gif' ? '.gif'
-      : mimeType === 'image/png' ? '.png'
-      : '.unknown';
-    const jstNow = new Date(Date.now() + ((new Date().getTimezoneOffset() + (9 * 60)) * 60 * 1000));
+    const fileExtension = mimeType === 'image/jpeg' ? 'jpg'
+                        : mimeType === 'image/gif'  ? 'gif'
+                        : mimeType === 'image/png'  ? 'png'
+                        : 'unknown';
+    const jstNow = this.jstService.getJstNow();
     const fileName = jstNow.getFullYear()
               + '-' + ('0' + (jstNow.getMonth() + 1)).slice(-2)
               + '-' + ('0' + jstNow.getDate()).slice(-2)
               + '-' + ('0' + jstNow.getHours()).slice(-2)
               + '-' + ('0' + jstNow.getMinutes()).slice(-2)
               + '-' + ('0' + jstNow.getSeconds()).slice(-2)
-              + fileExtension;
+              + '.' + fileExtension;
     return fileName;
   }
   
-  public async saveFile(file: Express.Multer.File, fileName: string): Promise<boolean> {
-    // `wx` フラグにより書き込みモードで開き、万が一同名ファイルが存在する場合はエラーとする
-    return await fs.writeFile(path.resolve(this.imagesDirectoryPath, fileName), file.buffer, { flag: 'wx' }).then(_result => true).catch(_error => false);
+  /** `wx` フラグにより書き込みモードで開き、万が一同名ファイルが存在する場合はエラーとする */
+  public async saveFile(file: Express.Multer.File, fileName: string): Promise<void> {
+    try {
+      await fs.writeFile(path.resolve(this.imagesDirectoryPath, fileName), file.buffer, { flag: 'wx' });
+    }
+    catch(error) {
+      this.logger.error('#saveFile() : ファイルの保存に失敗しました', error);
+      throw new Error('ファイルの保存に失敗しました');
+    }
   }
   
-  public async insertDb(fileName: string, tags: Array<string>): Promise<boolean> {
+  public async insertDb(fileName: string, tags: Array<string>): Promise<void> {
     try {
-      const db = await JSONFilePreset<DbData>(this.imagesDbFilePath, []);
+      const db = await this.jsonDbService.readDb();
       const currentMaxId = db.data.length ? Math.max(...db.data.map(item => item.id)) : 0;
       const newId = currentMaxId + 1;
-      const item: DbItem = {
+      const item: ImageDbItem = {
         id       : newId,
         file_name: fileName,
         tags     : tags
       };
       db.data.push(item);
       await db.write();
-      return true;
     }
-    catch(_error) {
-      return false;
+    catch(error) {
+      this.logger.error('#insertDb() : DB へのレコード登録に失敗しました', error);
+      throw new Error('DB へのレコード登録に失敗しました');
     }
   }
   
-  public async updateDb(id: number, tags: Array<string>): Promise<boolean> {
+  public async updateDb(id: number, tags: Array<string>): Promise<void> {
     try {
-      const db = await JSONFilePreset<DbData>(this.imagesDbFilePath, []);
+      const db = await this.jsonDbService.readDb();
       const targetIndex = db.data.findIndex(item => item.id === id);
-      if(targetIndex < 0) throw new Error('The Record Does Not Exist');
-      
+      if(targetIndex < 0) throw new Error('指定 ID のレコードは存在しませんでした');
       db.data[targetIndex].tags = tags;  // タグ情報を差し替える
       await db.write();
-      return true;
     }
-    catch(_error) {
-      return false;
+    catch(error) {
+      this.logger.error('#updateDb() : DB のレコード更新に失敗しました', error);
+      throw new Error('DB のレコード更新に失敗しました');
     }
   }
   
-  public async deleteDb(id: number): Promise<string | null> {
+  public async deleteDb(id: number): Promise<string> {
     try {
-      const db = await JSONFilePreset<DbData>(this.imagesDbFilePath, []);
+      const db = await this.jsonDbService.readDb();
       const targetIndex = db.data.findIndex(item => item.id === id);
-      if(targetIndex < 0) throw new Error('The Record Does Not Exist');
-      
+      if(targetIndex < 0) throw new Error('指定 ID のレコードは存在しませんでした');
       const fileName = db.data[targetIndex].file_name;
+      if(fileName == null || fileName.trim() === '') throw new Error('ファイル名が DB レコードにありません');
       db.data.splice(targetIndex, 1);
       await db.write();
       return fileName;
     }
-    catch(_error) {
-      return null;
+    catch(error) {
+      this.logger.error('#deleteDb() : DB のレコード削除に失敗しました', error);
+      throw new Error('DB のレコード削除に失敗しました');
     }
   }
   

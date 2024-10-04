@@ -1,4 +1,4 @@
-import { Controller, Logger, Post, RawBodyRequest, Req, Res } from '@nestjs/common';
+import { Controller, Logger, Post, Req, Res } from '@nestjs/common';
 import { Request, Response } from 'express';
 
 import { SlackService } from './slack.service';
@@ -37,15 +37,11 @@ export class SlackController {
       return this.logger.warn('#events() : リクエスト不正・反応しない', request.headers);
     }
     
-    // メンションへの反応
-    if(request.body?.event?.type === 'app_mention') {
-      this.slackService.replyToMention(request.body.event.channel, request.body.event.text);  // Promise
-      return this.logger.log('#events() : メンションへの反応');
-    }
-    // DM への反応
-    if(request.body?.event?.type === 'message') {
-      this.slackService.replyToDirectMessage(request.body.event.channel, request.body.event.text);  // Promise
-      return this.logger.log('#events() : DM への反応');
+    // メンション・DM への反応
+    if(['app_mention', 'message'].includes(request.body?.event?.type)) {
+      const type = request.body.event.type === 'app_mention' ? 'メンション' : 'DM';
+      this.slackService.reply(type, request.body.event.channel, request.body.event.text);  // Promise
+      return this.logger.log('#events() : メンション or DM への反応');
     }
     
     // その他イベント
@@ -65,7 +61,11 @@ export class SlackController {
       return this.logger.warn('#slackCommandZc() : リクエスト不正・反応しない', request.headers);
     }
     
-    this.slackService.zcCommand(request.body?.text, request.body?.response_url);  // Promise
-    this.logger.log('#slackCommandZc() : `/zc` スラッシュコマンドへの反応');
+    if(request.body?.text != null && request.body?.response_url != null) {
+      this.slackService.zcCommand(request.body.text, request.body.response_url);  // Promise
+      return this.logger.log('#slackCommandZc() : `/zc` スラッシュコマンドへの反応');
+    }
+    
+    this.logger.log('#slackCommandZc() : 必要なパラメータがないため反応しない', request.body);
   }
 }

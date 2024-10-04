@@ -13,6 +13,9 @@ export class ChatController {
   @Post('chat')
   public async chat(@Body('input_text') inputText: string, @Res() response: Response): Promise<void> {
     const result = await this.chatService.chat(inputText);
-    response.status(HttpStatus.OK).json({ result });
+    response.status(HttpStatus.OK).json({
+      output_text    : result.outputText,
+      image_file_name: result.imageFileName
+    });
   }
 }

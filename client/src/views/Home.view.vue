@@ -1,4 +1,7 @@
 <script lang="ts">
+/** 画像ファイルパスの接頭辞 */
+const imageFilePathPrefix: string = '/public/images/';
+
 /** 画像ファイル名をキャッシュしておく */
 const imageFileNames: Array<string> = [];
 
@@ -12,8 +15,8 @@ const fetchImageFileNames: () => Promise<Array<string>> = async () => {
   
   const imageFileNamesResponse = await fetch('/api/image/get-file-names');
   if(!imageFileNamesResponse.ok) throw new Error('Failed To Fetch Image File Names');
-  const imageFileNamesJson: Array<string> = await imageFileNamesResponse.json();
-  imageFileNames.push(...imageFileNamesJson.map(imageFileName => `/public/images/${imageFileName}`));  // キャッシュに残す
+  const imageFileNamesJson: { results: Array<string> } = await imageFileNamesResponse.json();
+  imageFileNames.push(...imageFileNamesJson.results.map(imageFileName => `${imageFilePathPrefix}${imageFileName}`));  // キャッシュに残す
   return imageFileNames;
 };
 
@@ -24,17 +27,29 @@ const getRandomFromArray = (array: Array<any>) => array[Math.floor(Math.random()
 <script setup lang="ts">
 import { ref } from 'vue';
 
-const isLoaded     = ref<boolean>(false);  // 初期表示が完了したか否か
-const isProcessing = ref<boolean>(false);  // API 通信中か否か
-const imageSrc     = ref<string>('');
-const message      = ref<string>('ザリガニねこは今何をしているでしょう？');
+/** 読み込み中か否か */
+const isLoaded = ref<boolean>(false);
+/** API 通信中か否か */
+const isProcessing = ref<boolean>(false);
+/** 画像の `src` 属性値 */
+const imageSrc = ref<string>('');
+/** 表示メッセージ */
+const message = ref<string>('ザリガニねこは今何をしているでしょう？');
 
+/** テキスト入力欄 */
 const inputTextModel = defineModel('inputTextModel');
-/** 送信ボタン押下時の処理 */
+
+/** ランダムに画像を取得して設定する */
+const setRandomImage = async () => {
+  const imageFileNames = await fetchImageFileNames();
+  imageSrc.value = getRandomFromArray(imageFileNames);  // TODO : 完全ランダムなので押下前と同じ画像が連続して表示されることもありうる
+};
+
+/** 送信ボタン押下時 */
 const onSubmit = async () => {
   // Validate
   const inputText = (inputTextModel.value as string).trim();
-  if(inputText === '') return alert('質問文を打ち込んでください');  // エラーメッセージの出し方イマイチ…
+  if(inputText === '') return;
   
   try {
     message.value = 'ザリガニねこに問い合わせています…';
@@ -43,48 +58,36 @@ const onSubmit = async () => {
     // 質問を API に投げる
     const response = await fetch('/api/chat', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         input_text: inputText
       })
     });
     if(!response.ok) throw new Error('ザリガニねこさんの様子が聞けませんでした。ごめんね');
-    const json = await response.json();
+    const json: { output_text: string, image_file_name: string } = await response.json();
     
     // メッセージを表示する
-    message.value  = json.result;
-    // 画像をランダムに差し替える
-    const imageFileNames = await fetchImageFileNames();
-    imageSrc.value = getRandomFromArray(imageFileNames);
+    message.value = json.output_text;
+    // 選択された画像を表示する
+    imageSrc.value = `${imageFilePathPrefix}${json.image_file_name}`;
   }
   catch(error) {
-    console.error('Failed To Chat', error);
-    message.value = (error as any).message;
+    console.error('AI チャット問い合わせに失敗', error);
+    message.value = (error as any).message ?? (error as any).toString();
   }
   finally {
     isProcessing.value = false;
   }
 };
 
-/** 画像をクリックした時の処理 */
-const onClickImage = async () => {
-  // 再びランダムに画像を取得して差し替える・押下前と同じ画像が連続して表示されることもありうる
-  const imageFileNames = await fetchImageFileNames();
-  imageSrc.value = getRandomFromArray(imageFileNames);
-};
-
-// 初期表示時の処理
+/** 初期表示時 */
 (async () => {
   try {
-    // 画像ファイル名のリストを取得する
-    const imageFileNames = await fetchImageFileNames();  // Throws
-    // ランダムに1つ画像ファイル名を取得し、表示する画像として割り当てる
-    imageSrc.value = getRandomFromArray(imageFileNames);
+    // ランダムに画像を表示する
+    await setRandomImage();
   }
   catch(error) {
-    console.error('Failed To Initialize', error);
+    console.error('初期表示処理に失敗', error);
     message.value = 'エラーが発生しました。ごめんね';
   }
   finally {
@@ -101,7 +104,7 @@ const onClickImage = async () => {
       
       <div class="output-container">
         <div class="image">
-          <img v-bind:src="imageSrc" @click="onClickImage">
+          <img v-bind:src="imageSrc" @click="setRandomImage">
         </div>
         <div class="message">
           {{ message }}
@@ -113,7 +116,7 @@ const onClickImage = async () => {
           <input type="text" v-model="inputTextModel" v-bind:disabled="isProcessing" placeholder="質問文を打ち込んでください" required maxlength="50">
         </div>
         <div class="submit-button">
-          <button type="submit" v-bind:disabled="isProcessing">送信</button>
+          <button type="submit" v-bind:disabled="isProcessing || (inputTextModel as string ?? '').trim() === ''">送信</button>
         </div>
       </form>
     </div>
