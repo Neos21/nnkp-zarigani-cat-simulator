@@ -11,6 +11,10 @@ export class AccessLogMiddleware implements NestMiddleware {
   /** ミドルウェアの処理 : アクセスログを出力する */
   public use(req: Request, _res: Response, next: NextFunction): void {
     this.logger.log(yellow(`[${req.method}]`) + ' ' + cyan(`[${req.baseUrl}]`) + this.stringifyParam('Query', req.query) + this.stringifyParam('Body', req.body));
+    
+    // トップページへの遷移時のみアクセス元情報を確認する
+    if(['', '/'].includes(req.baseUrl)) this.logger.log(`Origin [${req.headers.origin}]  Referer [${req.headers.referer}] IP [${req.ip}]`);
+    
     next();
   }
   
