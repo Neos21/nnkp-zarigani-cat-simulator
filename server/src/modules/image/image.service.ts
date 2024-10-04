@@ -1,21 +1,18 @@
 import * as fs from 'node:fs/promises';
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+
+import { JsonDbService } from '../shared/json-db.service';
 
 /** Image Service */
 @Injectable()
 export class ImageService {
-  private readonly imagesDirectoryPath: string;
-  
   constructor(
-    private readonly configService: ConfigService
-  ) {
-    this.imagesDirectoryPath = this.configService.get('imagesDirectoryPath');
-  }
+    private readonly jsonDbService: JsonDbService
+  ) { }
   
   /** ファイル名一覧を返す */
   public async listFileNames(): Promise<Array<string>> {
-    const allFileNames = await fs.readdir(this.imagesDirectoryPath);
-    return allFileNames.filter(fileName => fileName !== '.gitkeep');
+    const db = await this.jsonDbService.readDb();
+    return db.data.map(item => item.file_name);
   }
 }

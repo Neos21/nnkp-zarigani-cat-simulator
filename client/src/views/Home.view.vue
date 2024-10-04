@@ -1,4 +1,7 @@
 <script lang="ts">
+/** 画像ファイルパスの接頭辞 */
+const imageFilePathPrefix: string = '/public/images/';
+
 /** 画像ファイル名をキャッシュしておく */
 const imageFileNames: Array<string> = [];
 
@@ -13,7 +16,7 @@ const fetchImageFileNames: () => Promise<Array<string>> = async () => {
   const imageFileNamesResponse = await fetch('/api/image/get-file-names');
   if(!imageFileNamesResponse.ok) throw new Error('Failed To Fetch Image File Names');
   const imageFileNamesJson: { results: Array<string> } = await imageFileNamesResponse.json();
-  imageFileNames.push(...imageFileNamesJson.results.map(imageFileName => `/public/images/${imageFileName}`));  // キャッシュに残す
+  imageFileNames.push(...imageFileNamesJson.results.map(imageFileName => `${imageFilePathPrefix}${imageFileName}`));  // キャッシュに残す
   return imageFileNames;
 };
 
@@ -61,13 +64,12 @@ const onSubmit = async () => {
       })
     });
     if(!response.ok) throw new Error('ザリガニねこさんの様子が聞けませんでした。ごめんね');
-    const json = await response.json();
+    const json: { output_text: string, image_file_name: string } = await response.json();
     
     // メッセージを表示する
-    message.value = json.result;
-    
-    // 画像をランダムに差し替える
-    await setRandomImage();
+    message.value = json.output_text;
+    // 選択された画像を表示する
+    imageSrc.value = `${imageFilePathPrefix}${json.image_file_name}`;
   }
   catch(error) {
     console.error('AI チャット問い合わせに失敗', error);

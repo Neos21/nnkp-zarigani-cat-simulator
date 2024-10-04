@@ -3,10 +3,9 @@ import * as path from 'node:path';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
+import { JsonDbService } from '../shared/json-db.service';
 import { JstService } from '../shared/jst.service';
-import { Low } from '../../low-db/core-low';
-import { JSONFilePreset } from '../../low-db/presets';
-import type { ImageDbItem, ImageDbData } from '../../types/image';
+import type { ImageDbItem } from '../../types/image';
 
 /** Images Service */
 @Injectable()
@@ -17,18 +16,16 @@ export class ImagesService {
   private readonly allowMimeTypes: Array<string> = ['image/jpeg', 'image/gif', 'image/png'];
   
   private readonly logger: Logger = new Logger(ImagesService.name);
-  
   private readonly credential: string;
   private readonly imagesDirectoryPath: string;
-  private readonly imagesDbFilePath: string;
   
   constructor(
     private readonly configService: ConfigService,
+    private readonly jsonDbService: JsonDbService,
     private readonly jstService: JstService
   ) {
     this.credential          = this.configService.get('credential');
     this.imagesDirectoryPath = this.configService.get('imagesDirectoryPath');
-    this.imagesDbFilePath    = this.configService.get('imagesDbFilePath');
   }
   
   public validateCredential(inputCredential: string): void {
@@ -36,12 +33,12 @@ export class ImagesService {
   }
   
   public async listFiles(): Promise<Array<ImageDbItem>> {
-    const db = await this.readDb();
+    const db = await this.jsonDbService.readDb();
     return db.data;
   }
   
   public async getFile(id: number): Promise<ImageDbItem | null> {
-    const db = await this.readDb();
+    const db = await this.jsonDbService.readDb();
     const image = db.data.find(item => item.id === id);
     return image ?? null;
   }
@@ -90,7 +87,7 @@ export class ImagesService {
   
   public async insertDb(fileName: string, tags: Array<string>): Promise<void> {
     try {
-      const db = await this.readDb();
+      const db = await this.jsonDbService.readDb();
       const currentMaxId = db.data.length ? Math.max(...db.data.map(item => item.id)) : 0;
       const newId = currentMaxId + 1;
       const item: ImageDbItem = {
@@ -109,7 +106,7 @@ export class ImagesService {
   
   public async updateDb(id: number, tags: Array<string>): Promise<void> {
     try {
-      const db = await this.readDb();
+      const db = await this.jsonDbService.readDb();
       const targetIndex = db.data.findIndex(item => item.id === id);
       if(targetIndex < 0) throw new Error('指定 ID のレコードは存在しませんでした');
       db.data[targetIndex].tags = tags;  // タグ情報を差し替える
@@ -123,7 +120,7 @@ export class ImagesService {
   
   public async deleteDb(id: number): Promise<string> {
     try {
-      const db = await this.readDb();
+      const db = await this.jsonDbService.readDb();
       const targetIndex = db.data.findIndex(item => item.id === id);
       if(targetIndex < 0) throw new Error('指定 ID のレコードは存在しませんでした');
       const fileName = db.data[targetIndex].file_name;
@@ -140,9 +137,5 @@ export class ImagesService {
   
   public async removeFile(fileName: string): Promise<boolean> {
     return await fs.unlink(path.resolve(this.imagesDirectoryPath, fileName)).then(_result => true).catch(_error => false);
-  }
-  
-  private async readDb(): Promise<Low<ImageDbData>> {
-    return await JSONFilePreset<ImageDbData>(this.imagesDbFilePath, []);
   }
 }
