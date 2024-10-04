@@ -20,7 +20,7 @@ const onFetchImages = async () => {
   
   try {
     const credential = localStorage.getItem('credential');
-    if(credential == null || credential === '') throw new Error('Credential を設定してください');  // TODO : `alert()` で表示するのダサくない？
+    if(credential == null || credential === '') throw new Error('Credential を設定してください');
     
     const response = await fetch(`/api/images?credential=${credential}`);
     const json = await response.json();

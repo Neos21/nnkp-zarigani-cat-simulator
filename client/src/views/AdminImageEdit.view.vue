@@ -6,6 +6,7 @@ import type { ApiImage, Image } from '../types/image';
 import type { Tag } from '../types/tag';
 import LoadingComponent from '../components/Loading.component.vue';
 import ErrorMessageComponent from '../components/ErrorMessage.component.vue';
+import DialogComponent from '../components/Dialog.component.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -20,6 +21,8 @@ const id = ref<string>('');
 const image = ref<Image>();
 /** タグのリスト (編集用フォーム・`ref<Image>` 内の配列操作が困難なため切り出す) */
 const tags = ref<Array<Tag>>();
+/** ダイアログ要素の参照 */
+const dialog = ref();
 
 /** 画像情報を取得する */
 const onFetchImage = async () => {
@@ -29,7 +32,7 @@ const onFetchImage = async () => {
   
   try {
     const credential = localStorage.getItem('credential');
-    if(credential == null || credential === '') throw new Error('Credential を設定してください');  // TODO : `alert()` で表示するのダサくない？
+    if(credential == null || credential === '') throw new Error('Credential を設定してください');
     
     const response = await fetch(`/api/images/${id.value}?credential=${credential}`);
     const json = await response.json();
@@ -69,11 +72,12 @@ const onAddTag = () => {
 
 /** 画像情報を削除する */
 const onDelete = async () => {
-  if(!confirm('本当に削除しますか？')) return console.log('削除確認ダイアログをキャンセル');  // TODO : `confirm()` で確認するのダサくない？
+  const confirm = await dialog.value!.openDialog('削除確認', '本当に削除しますか？', true);
+  if(confirm !== 'OK') return console.log('削除確認ダイアログをキャンセル');
   
   // Credential
   const credential = localStorage.getItem('credential');
-  if(credential == null || credential === '') return alert('Credential を設定してください');  // TODO : `alert()` で表示するのダサくない？
+  if(credential == null || credential === '') return await dialog.value!.openDialog('エラー', 'Credential を設定してください');
   
   try {
     const response = await fetch(`/api/images/${id.value}?credential=${credential}`, { method: 'DELETE' });
@@ -82,26 +86,26 @@ const onDelete = async () => {
       throw new Error(json == null ? '原因不明のエラー' : json.error);
     }
     
-    alert('画像情報を削除しました');  // TODO : `alert()` で表示するのダサくない？
+    await dialog.value!.openDialog('削除完了', '画像情報を削除しました');
     
     // アップロード済み画像一覧に移動する
     router.push('/admin/images');
   }
   catch(error) {
     console.error('画像情報の削除に失敗', error);
-    alert('画像削除に失敗しました。もう一度やり直してください');  // TODO : `alert()` で表示するのダサくない？
+    await dialog.value!.openDialog('エラー', '画像の削除に失敗しました。もう一度やり直してください');
   }
 };
 
 /** 更新ボタン押下時 */
 const onUpdate = async () => {
-  // Credential
+  // Validate : Credential
   const credential = localStorage.getItem('credential');
-  if(credential == null || credential === '') return alert('Credential を設定してください');  // TODO : `alert()` で表示するのダサくない？
+  if(credential == null || credential === '') return await dialog.value!.openDialog('エラー', 'Credential を設定してください');
   
-  // タグ
+  // Validate : タグ
   const tagValues = tags.value!.map(tag => tag.value);
-  if(tagValues.some(tagValue => tagValue.trim() === '')) return alert('未入力のタグ行があります');  // TODO : `alert()` で表示するのダサくない？
+  if(tagValues.some(tagValue => tagValue.trim() === '')) return await dialog.value!.openDialog('エラー', '未入力のタグ行があります');
   
   try {
     const response = await fetch(`/api/images/${id.value}`, {
@@ -117,11 +121,11 @@ const onUpdate = async () => {
       throw new Error(json == null ? '原因不明のエラー' : json.error);
     }
     
-    alert('タグ情報を更新しました');  // TODO : `alert()` で表示するのダサくない？
+    await dialog.value!.openDialog('更新完了', 'タグ情報を更新しました');
   }
   catch(error) {
     console.error('画像情報の更新に失敗', error);
-    alert('更新に失敗しました。もう一度やり直してください');  // TODO : `alert()` で表示するのダサくない？
+    await dialog.value!.openDialog('エラー', '更新に失敗しました。もう一度やり直してください');
   }
 };
 
@@ -156,6 +160,8 @@ const onUpdate = async () => {
     <p><button type="button" @click="onDelete">画像を削除する</button></p>
     <p><button type="button" @click="onUpdate">更新</button></p>
   </div>
+  
+  <DialogComponent ref="dialog" />
 </div>
 <p class="footer"><RouterLink to="/admin/images">アップロード済み画像一覧に戻る</RouterLink></p>
 </template>
@@ -166,7 +172,7 @@ h3 {
 }
 
 .image-preview img {
-  max-width: 300px;  /* TODO : 画像プレビューのサイズ指定がテキトーすぎやしないか？ */
+  max-width: 300px;
 }
 
 .add-tag {

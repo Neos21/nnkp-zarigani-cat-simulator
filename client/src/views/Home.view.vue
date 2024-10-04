@@ -24,11 +24,16 @@ const getRandomFromArray = (array: Array<any>) => array[Math.floor(Math.random()
 <script setup lang="ts">
 import { ref } from 'vue';
 
-const isLoaded     = ref<boolean>(false);  // 初期表示が完了したか否か
-const isProcessing = ref<boolean>(false);  // API 通信中か否か
-const imageSrc     = ref<string>('');
-const message      = ref<string>('ザリガニねこは今何をしているでしょう？');
+/** 読み込み中か否か */
+const isLoaded = ref<boolean>(false);
+/** API 通信中か否か */
+const isProcessing = ref<boolean>(false);
+/** 画像の `src` 属性値 */
+const imageSrc = ref<string>('');
+/** 表示メッセージ */
+const message = ref<string>('ザリガニねこは今何をしているでしょう？');
 
+/** テキスト入力欄 */
 const inputTextModel = defineModel('inputTextModel');
 
 /** ランダムに画像を取得して設定する */
@@ -41,7 +46,7 @@ const setRandomImage = async () => {
 const onSubmit = async () => {
   // Validate
   const inputText = (inputTextModel.value as string).trim();
-  if(inputText === '') return alert('質問文を打ち込んでください');  // TODO : `alert()` で表示するのダサくない？
+  if(inputText === '') return;
   
   try {
     message.value = 'ザリガニねこに問い合わせています…';
@@ -109,7 +114,7 @@ const onSubmit = async () => {
           <input type="text" v-model="inputTextModel" v-bind:disabled="isProcessing" placeholder="質問文を打ち込んでください" required maxlength="50">
         </div>
         <div class="submit-button">
-          <button type="submit" v-bind:disabled="isProcessing">送信</button>
+          <button type="submit" v-bind:disabled="isProcessing || (inputTextModel as string ?? '').trim() === ''">送信</button>
         </div>
       </form>
     </div>

@@ -2,21 +2,24 @@
 import { ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 
+import DialogComponent from '../components/Dialog.component.vue';
+
 const route = useRoute();
 
 /** Credential */
 const credential = ref<string>('');
-
 /** フッターリンクの表示切替用・現在のパスを取得しておく */
 const currentRoutePath = ref<string>('');
+/** ダイアログ要素の参照 */
+const dialog = ref();
 
 /** Credential を LocalStorage に保存する */
-const onSubmit = () => {
+const onSubmit = async () => {
   const inputCredential = credential.value.trim();
-  if(inputCredential === '') return console.log('Credential が未入力');
+  if(inputCredential === '') return console.log('Credential 未入力');
   
   localStorage.setItem('credential', inputCredential);
-  alert('Credential を保存しました');  // TODO : `alert()` で表示するのダサくない？
+  await dialog.value!.openDialog('保存完了', 'Credential を保存しました');
 };
 
 /** 初期表示時 */
@@ -48,6 +51,8 @@ const onSubmit = () => {
     <RouterLink to="/admin" v-if="currentRoutePath !== '/admin'">管理画面トップに戻る</RouterLink>
     <RouterLink to="/"      v-if="currentRoutePath === '/admin'">Index に戻る</RouterLink>
   </div>
+  
+  <DialogComponent ref="dialog" />
 </div>
 </template>
 

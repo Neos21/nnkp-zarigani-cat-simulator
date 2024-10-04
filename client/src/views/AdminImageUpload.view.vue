@@ -4,6 +4,7 @@ import { ref } from 'vue';
 import type { Tag } from '../types/tag';
 import LoadingComponent from '../components/Loading.component.vue';
 import ErrorMessageComponent from '../components/ErrorMessage.component.vue';
+import DialogComponent from '../components/Dialog.component.vue';
 
 /** アップロード対象ファイルを控えておく */
 let file: File | null = null;
@@ -18,6 +19,8 @@ const form = ref();
 const fileSrc = ref<string>('');
 /** タグのリスト : デフォルト値として1行置いておく */
 const tags = ref<Array<Tag>>([{ id: 0, value: '' }]);
+/** ダイアログ要素の参照 */
+const dialog = ref();
 
 /** Credential を取得する・取得できなかった場合は例外を Throw する */
 const getCredential = (): string => {
@@ -42,13 +45,13 @@ const loadCredential = () => {
 }
 
 /** 画像ファイル変更時 : `[type="file"]` に対して `v-model` は使えないので `v-on:change` で監視する */
-const onChangeFile = (event: Event) => {
+const onChangeFile = async (event: Event) => {
   const inputFile: File | undefined = (event.target as HTMLInputElement).files?.[0];
   if(inputFile == null) return console.warn('画像ファイルが取得できなかった', event);
   
   if(!['.jpeg', '.jpg', '.gif', '.png'].some(extension => inputFile.name.endsWith(extension))) {
-    console.warn('画像でないファイルが選択されました', inputFile);
-    return alert('画像でないファイルが選択されました');  // TODO : `alert()` で表示するのダサくない？
+    console.warn('画像ではないファイルが選択されました', inputFile);
+    return await dialog.value!.openDialog('エラー', '画像ではないファイルが選択されました');
   }
   
   // ファイルを控えておく
@@ -90,15 +93,15 @@ const onSubmit = async () => {
     credential = getCredential();
   }
   catch(error) {
-    return alert('Credential を設定してください');  // TODO : `alert()` で表示するのダサくない？
+    return await dialog.value!.openDialog('エラー', 'Credential を設定してください');
   }
   
   // Validate : 画像ファイル
-  if(file == null) return alert('画像を選択してください');  // TODO : `alert()` で表示するのダサくない？
+  if(file == null) return await dialog.value!.openDialog('エラー', '画像を選択してください');
   
   // Validate : タグ
   const tagValues = tags.value.map(tag => tag.value);
-  if(tagValues.some(tagValue => tagValue.trim() === '')) return alert('未入力のタグ行があります');  // TODO : `alert()` で表示するのダサくない？
+  if(tagValues.some(tagValue => tagValue.trim() === '')) return await dialog.value!.openDialog('エラー', '未入力のタグ行があります');
   
   try {
     const formData = new FormData();
@@ -114,7 +117,7 @@ const onSubmit = async () => {
       throw new Error(json == null ? '原因不明のエラー' : json.error);
     }
     
-    alert('アップロードできました');  // TODO : `alert()` で表示するのダサくない？
+    await dialog.value!.openDialog('登録完了', '画像がアップロードできました');
     
     // フォームをリセットする
     form.value.reset();
@@ -122,7 +125,7 @@ const onSubmit = async () => {
   }
   catch(error) {
     console.error('アップロードに失敗', error);
-    alert('アップロードに失敗しました。もう一度やり直してください');  // TODO : `alert()` で表示するのダサくない？
+    await dialog.value!.openDialog('エラー', 'アップロードに失敗しました。もう一度やり直してください');
   }
 };
 
@@ -141,16 +144,14 @@ const onSubmit = async () => {
 </div>
 <form v-else @submit.prevent="onSubmit" ref="form">
   <p><input type="file" accept=".jpeg, .jpg, .gif, .png" @change="onChangeFile"></p>
-  <!-- TODO : プレビュー欄の出し方・デザインがダサくない？ -->
   <p class="image-preview" v-if="fileSrc !== ''">
     <img v-bind:src="fileSrc">
   </p>
   
-  <p class="add-tag"><button type="button" @click="onAddTag">タグを追加</button></p>
+  <p class="add-tag"><button type="button" accesskey="a" @click="onAddTag">タグを追加</button></p>
   <div class="tags" v-for="(tag, index) in tags" v-bind:key="tag as unknown as PropertyKey">
     <div class="tag-row">
-      <div>{{ index + 1 }}</div>
-      <input type="text" v-model="tag.value" placeholder="タグ">
+      <input type="text" v-model="tag.value" v-bind:placeholder="`タグ ${index + 1}`">
       <button type="button" @click="onRemoveTag(index)" v-bind:disabled="index === 0">削除</button>  <!-- 1行目は削除できないようにしておく -->
     </div>
   </div>
@@ -159,12 +160,14 @@ const onSubmit = async () => {
     <p><button type="reset" @click="onReset">リセット</button></p>
     <p><button type="submit">アップロード</button></p>
   </div>
+  
+  <DialogComponent ref="dialog" />
 </form>
 </template>
 
 <style scoped>
 .image-preview img {
-  max-width: 300px;  /* TODO : 画像プレビューのサイズ指定がテキトーすぎやしないか？ */
+  max-width: 300px;
 }
 
 .add-tag {
@@ -175,11 +178,8 @@ const onSubmit = async () => {
   margin-bottom: .5rem;
   display: grid;
   column-gap: .5rem;
-  grid-template-columns: 2.5rem 1fr auto;
+  grid-template-columns: 1fr auto;
 }
-  .tag-row > div {
-    text-align: right;
-  }
 
 .controls {
   margin-top: 2rem;
