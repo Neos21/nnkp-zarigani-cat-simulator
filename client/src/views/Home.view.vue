@@ -42,7 +42,7 @@ const inputTextModel = defineModel('inputTextModel');
 /** ランダムに画像を取得して設定する */
 const setRandomImage = async () => {
   const imageFileNames = await fetchImageFileNames();
-  imageSrc.value = getRandomFromArray(imageFileNames);  // TODO : 完全ランダムなので押下前と同じ画像が連続して表示されることもありうる
+  imageSrc.value = getRandomFromArray(imageFileNames);
 };
 
 /** 送信ボタン押下時 */
