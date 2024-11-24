@@ -11,3 +11,5 @@ import { widipeCom } from '../src/providers/widipe-com';
     console.error('Error :', error);
   }
 })();
+
+// 2024-11-24 : ENOTFOUND エラー

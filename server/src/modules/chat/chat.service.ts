@@ -3,9 +3,10 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ChatMessageService } from '../shared/chat-message.service';
 import { JsonDbService } from '../shared/json-db.service';
 import { SlackLoggerService } from '../shared/slack-logger.service';
-import { nexraAryahcrCc } from '../../providers/nexra-aryahcr-cc';
 import { ImageDbItem } from '../../types/image';
 import { tagDictionary } from './tag-dictionary';
+import { blackboxAi } from 'src/providers/blackbox-ai';
+import { apiRnilaweeraLk } from 'src/providers/api-rnilaweera-lk';
 
 /** Chat Service */
 @Injectable()
@@ -25,8 +26,15 @@ export class ChatService {
   
   /** AI Chat 処理 */
   public async chat(inputText: string): Promise<{ outputText: string, imageFileName: string }> {
-    const messages = this.chatMessageService.createMessageWithEmotionParameter(inputText);
-    const result = await nexraAryahcrCc(messages, 'gpt3.5-turbo').catch(() => null);
+    const result = await blackboxAi(this.chatMessageService.createMessage(inputText))
+      .catch(error => {
+        this.logger.warn(`#chat() : Blackbox AI の API コールに失敗・API Rnilaweera Lk にフォールバック`, error);
+        return apiRnilaweeraLk(this.chatMessageService.createOneMessage(inputText));
+      })
+      .catch(error => {
+        this.logger.warn(`#chat() : API Rnilaweera Lk の API コールに失敗・フォールバック不可能`, error);
+        return null;
+      });
     
     // AI の応答が上手くいかなかった場合 : ランダムに1枚の画像を指定する
     if(result == null) {
@@ -37,26 +45,27 @@ export class ChatService {
       return { outputText, imageFileName };
     }
     
-    const rawOutputText = result.trim().replace((/\n{2,}/g), '\n');  // 空行を削除する
-    this.slackLoggerService.notify('Web', inputText, rawOutputText);  // とりあえずログ出ししちゃう
+    const outputText = result.trim().replace((/\n{2,}/g), '\n');  // 空行を削除する
+    this.slackLoggerService.notify('Web', inputText, outputText);  // とりあえずログ出ししちゃう
     
-    // 感情パラメーターを抽出し回答文を整形しておく
-    const { emotion, outputText } = this.extractEmotion(rawOutputText);
+    //// 感情パラメータを抽出し回答文を整形しておく
+    //const { emotion, outputText } = this.extractEmotion(rawOutputText);
     
-    // 感情パラメーターが抽出できたら、感情パラメーターを基に画像を検索し1つ取得する
-    if(emotion != null) {
-      const imageFileName = await this.searchImageFileNameByEmotion(emotion);
-      if(imageFileName != null) return { outputText, imageFileName };
-      // 感情パラメーターを基にした画像が1つも取得できなかった場合は以下に続行する
-    }
+    //// 感情パラメータが抽出できたら、感情パラメータを基に画像を検索し1つ取得する
+    //if(emotion != null) {
+    //  const imageFileName = await this.searchImageFileNameByEmotion(emotion);
+    //  if(imageFileName != null) return { outputText, imageFileName };
+    //  // 感情パラメータを基にした画像が1つも取得できなかった場合は以下に続行する
+    //}
     
-    // 感情パラメーターでの応答がうまくいかなかったら、キーワードに合致する画像を探してみる
+    //// 感情パラメータでの応答がうまくいかなかったら
+    // キーワードに合致する画像を探してみる
     const keywordImageFileName = await this.searchImageFileNameByKeyword(outputText);
     if(keywordImageFileName != null) return { outputText, imageFileName: keywordImageFileName };
     
     // どれもダメだったら全ての画像からランダムに1つ選択する
     const imageFileName = await this.getRandomOneImageFileName();
-    this.logger.log(`#chat() : 感情パラメーター・キーワード検索が合致しなかったため、ランダムに1枚の画像を用意する : 選択画像ファイル名 [${imageFileName}]`);
+    this.logger.log(`#chat() : キーワード検索が合致しなかったため、ランダムに1枚の画像を用意する : 選択画像ファイル名 [${imageFileName}]`);
     return { outputText, imageFileName };
   }
   
@@ -98,9 +107,9 @@ export class ChatService {
     return this.getRandomOneFromArray(imageFileNames);
   }
   
-  /** 感情パラメーターを抽出し本文から切り取る */
+  /** 感情パラメータを抽出し本文から切り取る */
   private extractEmotion(rawOutputText: string): { emotion: string | null, outputText: string } {
-    /** 感情パラメーターの行を取り除いた本文を取得する */
+    /** 感情パラメータの行を取り除いた本文を取得する */
     const extractTextFromLineTwo = (lines: Array<string>): string => {
       if(lines[1] != null) {  // 2行目が存在したら2行目以降を返す
         const newLines = [...lines];  // 配列を複製する
@@ -114,34 +123,34 @@ export class ChatService {
     
     const lines = rawOutputText.split('\n');
     const maybeEmotionKanji = lines[0];  // 多分漢字1文字が入っているはず
-    if(['喜', '怒', '哀', '楽'].some(emotionKanji => maybeEmotionKanji.startsWith(emotionKanji))) {  // 1行目が喜怒哀楽のいずれかの漢字で始まっていれば感情パラメーターの抽出に成功したものとする
-      this.logger.log(`#extractEmotion() : 感情パラメーターの (漢字1文字) の抽出に成功 : [${maybeEmotionKanji}]`);
+    if(['喜', '怒', '哀', '楽'].some(emotionKanji => maybeEmotionKanji.startsWith(emotionKanji))) {  // 1行目が喜怒哀楽のいずれかの漢字で始まっていれば感情パラメータの抽出に成功したものとする
+      this.logger.log(`#extractEmotion() : 感情パラメータの (漢字1文字) の抽出に成功 : [${maybeEmotionKanji}]`);
       const outputText = extractTextFromLineTwo(lines);  // 2行目以降を本文として抽出する
       return { emotion: maybeEmotionKanji, outputText };
     }
-    else if(maybeEmotionKanji.length === 1) {  // 未知の1文字だった場合は感情パラメーターなしとして扱う
-      this.logger.log(`#extractEmotion() : 感情パラメーターが不明な1文字 : [${maybeEmotionKanji}]`);
+    else if(maybeEmotionKanji.length === 1) {  // 未知の1文字だった場合は感情パラメータなしとして扱う
+      this.logger.log(`#extractEmotion() : 感情パラメータが不明な1文字 : [${maybeEmotionKanji}]`);
       const outputText = extractTextFromLineTwo(lines);  // 2行目以降を本文として抽出する
       return { emotion: null, outputText };
     }
     else {  // 1行目に1文字以上入っている場合は諦めて1行目から全部繋げて返す
-      this.logger.log(`#extractEmotion() : 感情パラメーターが文章 : [${maybeEmotionKanji}]`);
+      this.logger.log(`#extractEmotion() : 感情パラメータが文章 : [${maybeEmotionKanji}]`);
       return { emotion: null, outputText: lines.join('') };
     }
   }
   
-  /** 感情パラメーター (喜怒哀楽の漢字1文字) を条件に画像を1枚取得する */
+  /** 感情パラメータ (喜怒哀楽の漢字1文字) を条件に画像を1枚取得する */
   private async searchImageFileNameByEmotion(emotion: string): Promise<string | null> {
     const dbData = await this.loadDbData();
     const emotionImageFileNames = dbData
-      .filter(item => item.tags.includes(emotion))  // 感情パラメーターの漢字1文字と合致したタグがあるモノを選択する
+      .filter(item => item.tags.includes(emotion))  // 感情パラメータの漢字1文字と合致したタグがあるモノを選択する
       .map(item => item.file_name);
     
     // タグに合致する画像が一つもなければ諦める
     if(emotionImageFileNames.length === 0) return null;
     
     const imageFileName = this.getRandomOneFromArray(emotionImageFileNames);
-    this.logger.log(`#searchImageFileNameByEmotion() : 感情パラメーターを基に画像を1つ選択 : 検索結果 [${emotionImageFileNames.length} 件] 感情 [${emotion}] 選択画像ファイル名 [${imageFileName}]`);
+    this.logger.log(`#searchImageFileNameByEmotion() : 感情パラメータを基に画像を1つ選択 : 検索結果 [${emotionImageFileNames.length} 件] 感情 [${emotion}] 選択画像ファイル名 [${imageFileName}]`);
     return imageFileName;
   }
   

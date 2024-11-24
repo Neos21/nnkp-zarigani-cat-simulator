@@ -14,3 +14,5 @@ import { blackboxAi } from '../src/providers/blackbox-ai';
     console.error('Error :', error);
   }
 })();
+
+// 2024-11-24 : 日本語で答える

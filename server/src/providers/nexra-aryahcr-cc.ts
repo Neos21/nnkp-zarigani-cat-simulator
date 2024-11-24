@@ -6,7 +6,7 @@ import { Message } from './providers';
 export type NexraAryahcrCcModel = 'gpt-4' | 'gpt3.5-turbo' | 'gpt-3';
 
 /** Nexra AryahCR CC プロバイダ */
-export const nexraAryahcrCc = async function(messages: Array<Message>, model: NexraAryahcrCcModel = 'gpt3.5-turbo'): Promise<string> {
+export const nexraAryahcrCc = async function(messages: Array<Message>, model: NexraAryahcrCcModel = 'gpt-4'): Promise<string> {
   const response = await fetch('https://nexra.aryahcr.cc/api/chat/gpt', {
     method: 'POST',
     headers: {

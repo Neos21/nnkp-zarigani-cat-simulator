@@ -11,3 +11,5 @@ import { andrieVercelApp } from '../src/providers/andrie-vercel-app';
     console.error('Error :', error);
   }
 })();
+
+// 2024-11-24 : 英語 (ローマ字) で答える

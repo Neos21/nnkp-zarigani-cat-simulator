@@ -11,3 +11,5 @@ import { apiRnilaweeraLk } from '../src/providers/api-rnilaweera-lk';
     console.error('Error :', error);
   }
 })();
+
+// 2024-11-24 : 日本語で答える・それなりに使える

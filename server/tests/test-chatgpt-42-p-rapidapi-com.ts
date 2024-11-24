@@ -14,3 +14,5 @@ import { chatGpt42PRapidApiCom } from '../src/providers/chatgpt-42-p-rapidapi-co
     console.error('Error :', error);
   }
 })();
+
+// 2024-11-24 : 英語で答える
