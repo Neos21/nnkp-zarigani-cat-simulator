@@ -15,7 +15,7 @@ export default defineConfig({
       '^/public/images': {
         target: 'http://localhost:5000',  // バックエンドの開発用サーバのポートを指定する
         changeOrigin: true
-      },
+      }
     }
   }
 });

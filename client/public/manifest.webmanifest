@@ -1,0 +1,13 @@
+{
+  "name": "なな子プロジェクト ザリガニねこシミュレーター",
+  "short_name": "ザリガニねこシミュレーター",
+  "lang": "ja",
+  "theme_color": "#fff3f3",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "start_url": "https://nnkp.neos21.net/",
+  "icons": [
+    { "src": "manifest-icon-192.png", "type": "image/png", "sizes": "192x192" },
+    { "src": "manifest-icon-512.png", "type": "image/png", "sizes": "512x512" }
+  ]
+}
