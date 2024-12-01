@@ -26,13 +26,9 @@ export class ChatService {
   
   /** AI Chat 処理 */
   public async chat(inputText: string): Promise<{ outputText: string, imageFileName: string }> {
-    const result = await blackboxAi(this.chatMessageService.createMessage(inputText))
+    const result = await apiRnilaweeraLk(this.chatMessageService.createOneMessage(inputText))
       .catch(error => {
-        this.logger.warn(`#chat() : Blackbox AI の API コールに失敗・API Rnilaweera Lk にフォールバック`, error);
-        return apiRnilaweeraLk(this.chatMessageService.createOneMessage(inputText));
-      })
-      .catch(error => {
-        this.logger.warn(`#chat() : API Rnilaweera Lk の API コールに失敗・フォールバック不可能`, error);
+        this.logger.warn('#chat() : API Rnilaweera Lk の API コールに失敗・フォールバック不可能', error);
         return null;
       });
     
