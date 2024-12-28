@@ -25,7 +25,7 @@ export const blackboxAi = async function(messages: Array<Message>): Promise<stri
   });
   const rawText = await response.text();
   const text = rawText.replace((/(\$\@\$.*?\$\@\$)/g), '').trim();
-  if(text.includes('blackbox.ai')) throw new Error('Invalid Response Text');
+  if(text.includes('blackbox.ai')) throw new Error(`Invalid Response Text : ${rawText}`);
   return text;
 };
 

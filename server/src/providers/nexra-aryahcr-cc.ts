@@ -1,4 +1,5 @@
-import fetch from 'node-fetch';  // NOTE : ts-node で実行できるように CommonJS 形式の v2 系を使うこと
+// NOTE : ts-node で実行できるように CommonJS 形式の v2 系を使うこと
+import fetch from 'node-fetch';
 
 import { Message } from './providers';
 
